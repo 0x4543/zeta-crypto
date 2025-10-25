@@ -36,3 +36,12 @@ impl Wallet {
         hex::encode(&hash[..20])
     }
 }
+impl Wallet {
+    /// Generate a random 32-byte hex key (for demo/testing purposes)
+    pub fn generate_random_hex() -> String {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        let bytes: [u8; 32] = rng.gen();
+        hex::encode(bytes)
+    }
+}
