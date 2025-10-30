@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
 use anyhow::Result;
-use zeta_crypto::{MnemonicHelper, Wallet, Signer};
+use zeta_crypto::{MnemonicHelper, Wallet, Signer, WalletConnectSession};
+use k256::EncodedPoint;
+use hex;
 
 #[derive(Parser)]
 #[command(author, version, about = "zeta-cli: tiny crypto playground")]
@@ -15,10 +17,12 @@ enum Commands {
     Derive { phrase: String, pass: Option<String> },
     Sign { phrase: String, pass: Option<String>, msg: String },
     Verify { pubhex: String, msg: String, sig: String },
+    WalletConnect { peer: String, action: String },
 }
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
     match cli.cmd {
         Commands::GenMnemonic => {
             let mn = MnemonicHelper::generate();
@@ -36,14 +40,23 @@ fn main() -> Result<()> {
             let sig = Signer::sign(&sk, msg.as_bytes());
             println!("sig: {}", sig);
         }
-        Commands::Verify { pubhex: _pubhex, msg, sig } => {
-            use k256::EncodedPoint;
-            let bytes = hex::decode(_pubhex)?;
+        Commands::Verify { pubhex, msg, sig } => {
+            let bytes = hex::decode(pubhex)?;
             let ep = EncodedPoint::from_bytes(&bytes)?;
             let vk = k256::ecdsa::VerifyingKey::from_encoded_point(&ep)?;
             let ok = Signer::verify(&vk, msg.as_bytes(), &sig)?;
             println!("verified: {}", ok);
         }
+        Commands::WalletConnect { peer, action } => {
+            let mut session = WalletConnectSession::new(&peer);
+            match action.as_str() {
+                "connect" => session.connect(),
+                "disconnect" => session.disconnect(),
+                _ => println!("Unknown action: {}", action),
+            }
+            println!("Session status: {}", session.status());
+        }
     }
+
     Ok(())
 }
