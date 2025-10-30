@@ -1,28 +1,45 @@
 # Zeta Crypto
 
-Tiny Rust library and CLI demonstrating mnemonic, key derivation, signing and verifying.
-
-For learning and prototyping only.
+Tiny crypto playground for experimenting with wallets, signing, and verification.
 
 ## Features
 
-- Generate 12-word BIP39 mnemonic
-- Derive wallet from mnemonic with simple PBKDF2-based key derivation
-- ECDSA secp256k1 keypair generation, signing and verifying
-- CLI for quick testing and wallet operations
-- Generate random 32-byte hex keys (for demo/testing)
+- Generate Mnemonic phrases
+- Derive wallets from mnemonic
+- Sign and verify messages
+- WalletConnect sessions via CLI
 
-## CLI Examples
+## CLI Usage
+
+### Mnemonic
 
 ```bash
-# Generate new mnemonic
-cargo run --bin zeta-cli -- GenMnemonic
+# Generate a new mnemonic
+zeta-cli gen-mnemonic
 
-# Derive wallet address
-cargo run --bin zeta-cli -- Derive --phrase "your twelve word mnemonic"
+# Derive a wallet from a mnemonic
+zeta-cli derive --phrase "<mnemonic_phrase>" --pass "optional_password"
+```
 
+### Wallet
+
+```bash
 # Sign a message
-cargo run --bin zeta-cli -- Sign --phrase "your mnemonic" --msg "hello world"
+zeta-cli sign --phrase "<mnemonic_phrase>" --pass "optional_password" --msg "Hello"
 
 # Verify a signature
-cargo run --bin zeta-cli -- Verify --pubhex "<pubkey hex>" --msg "hello world" --sig "<signature hex>"
+zeta-cli verify --pubhex "<public_key_hex>" --msg "Hello" --sig "<signature>"
+```
+
+### WalletConnect
+
+```bash
+# Connect to a peer
+zeta-cli walletconnect --peer <PEER_NAME> --action connect
+
+# Disconnect from a peer
+zeta-cli walletconnect --peer <PEER_NAME> --action disconnect
+```
+
+The CLI will display the session status after each action.
+
