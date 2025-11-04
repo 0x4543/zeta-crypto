@@ -1,45 +1,62 @@
-# Zeta Crypto
+# Zeta Crypto CLI
 
-Tiny crypto playground for experimenting with wallets, signing, and verification.
+`zeta-crypto` is a lightweight Rust-based command-line tool for experimenting with wallet functionality, mnemonic generation, signing, and WalletConnect sessions.
 
-## Features
+---
 
-- Generate Mnemonic phrases
-- Derive wallets from mnemonic
-- Sign and verify messages
-- WalletConnect sessions via CLI
+### Commands Overview
 
-## CLI Usage
-
-### Mnemonic
-
+#### Generate Mnemonic
 ```bash
-# Generate a new mnemonic
 zeta-cli gen-mnemonic
-
-# Derive a wallet from a mnemonic
-zeta-cli derive --phrase "<mnemonic_phrase>" --pass "optional_password"
 ```
+Generates a new BIP39 mnemonic phrase.
 
-### Wallet
+#### Derive Wallet
+```bash
+zeta-cli derive-wallet --phrase "<mnemonic>" --pass "<optional password>"
+```
+Derives a wallet address from a mnemonic phrase.
+
+#### Sign Message
+```bash
+zeta-cli sign --phrase "<mnemonic>" --msg "hello world"
+```
+Signs a message using the wallet’s private key.
+
+#### Verify Signature
+```bash
+zeta-cli verify --pubhex <public_key_hex> --msg "hello world" --sig <signature>
+```
+Verifies a previously signed message.
+
+#### WalletConnect
+```bash
+zeta-cli walletconnect --peer <peer_url> --action connect
+```
+Establish or disconnect a WalletConnect session with a peer.
+
+---
+
+### WalletConnect Status
+
+Check if a WalletConnect peer is active and reachable.
 
 ```bash
-# Sign a message
-zeta-cli sign --phrase "<mnemonic_phrase>" --pass "optional_password" --msg "Hello"
-
-# Verify a signature
-zeta-cli verify --pubhex "<public_key_hex>" --msg "Hello" --sig "<signature>"
+zeta-cli walletconnect-status --peer "wc:example@2?relay-protocol=irn&symKey=..."
 ```
 
-### WalletConnect
-
-```bash
-# Connect to a peer
-zeta-cli walletconnect --peer <PEER_NAME> --action connect
-
-# Disconnect from a peer
-zeta-cli walletconnect --peer <PEER_NAME> --action disconnect
+**Output:**
+```
+✅ WalletConnect peer is active and reachable
+```
+or
+```
+⚠️ Unable to reach peer or session inactive
 ```
 
-The CLI will display the session status after each action.
+---
+
+### License
+MIT
 
