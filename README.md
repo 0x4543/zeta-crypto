@@ -1,5 +1,10 @@
 # Zeta Crypto CLI
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+![Language: Rust](https://img.shields.io/badge/language-Rust-orange)
+![Status: Experimental](https://img.shields.io/badge/status-experimental-blueviolet)
+![CLI](https://img.shields.io/badge/type-CLI-blue)
+
 `zeta-crypto` is a lightweight Rust-based command-line tool for experimenting with wallet functionality, mnemonic generation, signing, and WalletConnect sessions.
 
 ---
