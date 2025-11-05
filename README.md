@@ -46,6 +46,17 @@ Check if a WalletConnect peer is active and reachable.
 zeta-cli walletconnect-status --peer "wc:example@2?relay-protocol=irn&symKey=..."
 ```
 
+**Output:**
+```
+✅ WalletConnect peer is active and reachable
+```
+or
+```
+⚠️ Unable to reach peer or session inactive
+```
+
+---
+
 ### WalletConnect Info
 
 Display detailed information about a WalletConnect peer, including its status and last update timestamp.
@@ -55,7 +66,6 @@ zeta-cli walletconnect-info --peer "wc:example@2?relay-protocol=irn&symKey=..."
 ```
 
 **Output:**
-
 ```
 Peer: wc:example@2?relay-protocol=irn&symKey=...
 Status: connected (updated at 1730573102)
@@ -63,14 +73,24 @@ Status: connected (updated at 1730573102)
 
 This command helps monitor the current state of a WalletConnect session and can be used together with `walletconnect-status` to perform basic connection health checks.
 
-**Output:**
+---
+
+### Key Derivation (PBKDF2 / HKDF)
+
+You can derive a secure key from a passphrase using PBKDF2 and HKDF functions implemented in the project.
+
+```bash
+zeta-cli derive-key --pass "mysecretpassword"
 ```
-✅ WalletConnect peer is active and reachable
+
+This will generate a deterministic key derived from the given passphrase. The derivation process uses PBKDF2 with HMAC-SHA256 and HKDF for additional entropy expansion.
+
+**Example output:**
 ```
-or
+Derived key (hex): 4f3a12c6b7a9c1e3f6d8...
 ```
-⚠️ Unable to reach peer or session inactive
-```
+
+This can be useful for generating session secrets, encryption keys, or other secure materials in crypto-related workflows.
 
 ---
 
