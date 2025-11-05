@@ -21,6 +21,7 @@ enum Commands {
     WalletConnect { peer: String, action: String },
     DeriveKeyPBKDF2 { seed: String, salt: String, iterations: u32, output_len: usize },
     DeriveKeyHKDF { seed: String, salt: String, output_len: usize },
+    WalletConnectInfo { peer: String },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -66,6 +67,11 @@ fn main() -> anyhow::Result<()> {
         Commands::DeriveKeyHKDF { seed, salt, output_len } => {
             let d = derive_key_hkdf(seed.as_bytes(), salt.as_bytes(), output_len);
             println!("{}", d);
+        }
+        Commands::WalletConnectInfo { peer } => {
+            let session = WalletConnectSession::new(&peer);
+            println!("Peer: {}", peer);
+            println!("Status: {}", session.status());
         }
     }
 
