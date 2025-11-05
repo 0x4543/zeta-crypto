@@ -9,6 +9,7 @@ k256 = { version = "0.12", features = ["ecdsa"] }
 pbkdf2 = "0.10"
 hmac = "0.12"
 sha2 = "0.10"
+hkdf = "0.12"
 rand = "0.8"
 hex = "0.4"
 base64 = "0.21"
