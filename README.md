@@ -80,6 +80,28 @@ This command helps monitor the current state of a WalletConnect session and can 
 
 ---
 
+### WalletConnect Restore
+
+You can restore the last saved WalletConnect session from local storage.
+
+```bash
+zeta-cli walletconnect-restore
+```
+
+**Example output:**
+```
+Restored session:
+Peer: wc:example@2?relay-protocol=irn&symKey=...
+Status: connected (updated at 1730580445)
+```
+
+If no saved session is found, the CLI will display:
+```
+No saved WalletConnect session found
+```
+
+---
+
 ### Key Derivation (PBKDF2 / HKDF)
 
 You can derive a secure key from a passphrase using PBKDF2 and HKDF functions implemented in the project.
