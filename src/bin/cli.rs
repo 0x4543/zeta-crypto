@@ -1,8 +1,6 @@
 use clap::{Parser, Subcommand};
-use zeta_crypto::{
-    MnemonicHelper, Wallet, Signer,
-    WalletConnectSession, derive_key_pbkdf2, derive_key_hkdf,
-};
+use zeta_crypto::{MnemonicHelper, Wallet, Signer, WalletConnectSession};
+use anyhow::Result;
 use hex;
 
 #[derive(Parser)]
@@ -19,12 +17,12 @@ enum Commands {
     Sign { phrase: String, pass: Option<String>, msg: String },
     Verify { pubhex: String, msg: String, sig: String },
     WalletConnect { peer: String, action: String },
-    DeriveKeyPBKDF2 { seed: String, salt: String, iterations: u32, output_len: usize },
-    DeriveKeyHKDF { seed: String, salt: String, output_len: usize },
+    WalletConnectStatus { peer: String },
     WalletConnectInfo { peer: String },
+    WalletConnectRestore,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.cmd {
@@ -60,18 +58,29 @@ fn main() -> anyhow::Result<()> {
             }
             println!("{}", session.status());
         }
-        Commands::DeriveKeyPBKDF2 { seed, salt, iterations, output_len } => {
-            let d = derive_key_pbkdf2(seed.as_bytes(), salt.as_bytes(), iterations, output_len);
-            println!("{}", d);
-        }
-        Commands::DeriveKeyHKDF { seed, salt, output_len } => {
-            let d = derive_key_hkdf(seed.as_bytes(), salt.as_bytes(), output_len);
-            println!("{}", d);
+        Commands::WalletConnectStatus { peer } => {
+            let session = WalletConnectSession::new(&peer);
+            let connected = session.status().contains("connected");
+            if connected {
+                println!("✅ WalletConnect peer is active and reachable");
+            } else {
+                println!("⚠️ Unable to reach peer or session inactive");
+            }
         }
         Commands::WalletConnectInfo { peer } => {
             let session = WalletConnectSession::new(&peer);
             println!("Peer: {}", peer);
             println!("Status: {}", session.status());
+        }
+        Commands::WalletConnectRestore => {
+            match WalletConnectSession::from_file() {
+                Some(s) => {
+                    println!("Restored session:");
+                    println!("Peer: {}", s.peer());
+                    println!("Status: {}", s.status());
+                }
+                None => println!("No saved WalletConnect session found"),
+            }
         }
     }
 
