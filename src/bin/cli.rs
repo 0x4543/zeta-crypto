@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use zeta_crypto::{MnemonicHelper, Wallet, Signer, WalletConnectSession};
+use zeta_crypto::{MnemonicHelper, Wallet, Signer, WalletConnectSession, ZetaConfig};
 use anyhow::Result;
 use hex;
 
@@ -20,6 +20,8 @@ enum Commands {
     WalletConnectStatus { peer: String },
     WalletConnectInfo { peer: String },
     WalletConnectRestore,
+    WalletConnectDefault { action: String },
+    ConfigShow,
 }
 
 fn main() -> Result<()> {
@@ -81,6 +83,30 @@ fn main() -> Result<()> {
                 }
                 None => println!("No saved WalletConnect session found"),
             }
+        }
+        Commands::WalletConnectDefault { action } => {
+            let cfg = ZetaConfig::load();
+            match cfg.default_peer {
+                Some(peer) => {
+                    let mut session = WalletConnectSession::new(&peer);
+                    match action.as_str() {
+                        "connect" => session.connect(),
+                        "disconnect" => session.disconnect(),
+                        _ => {
+                            println!("Unknown action: {}", action);
+                            return Ok(());
+                        }
+                    }
+                    println!("{}", session.status());
+                }
+                None => {
+                    println!("No default_peer found in config. Create ~/.zeta_crypto/config.toml with e.g.:\n\ndefault_peer = \"wc:example@2?relay-protocol=irn&symKey=...\"\nauto_connect = true");
+                }
+            }
+        }
+        Commands::ConfigShow => {
+            let cfg = ZetaConfig::load();
+            println!("{:?}", cfg);
         }
     }
 
