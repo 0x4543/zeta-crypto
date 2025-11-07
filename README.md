@@ -102,6 +102,34 @@ No saved WalletConnect session found
 
 ---
 
+### WalletConnect Default & Config
+
+You can define a default peer and optional auto-connect setting in `~/.zeta_crypto/config.toml`.
+
+**Example:**
+```toml
+default_peer = "wc:example@2?relay-protocol=irn&symKey=..."
+auto_connect = true
+```
+
+Use this configuration to simplify WalletConnect usage:
+
+```bash
+# Use the default peer from config to connect or disconnect
+zeta-cli walletconnect-default connect
+zeta-cli walletconnect-default disconnect
+
+# Display current configuration
+zeta-cli config-show
+```
+
+**Example output:**
+```
+ZetaConfig { default_peer: Some("wc:example@2?relay-protocol=irn&symKey=..."), auto_connect: Some(true) }
+```
+
+---
+
 ### Key Derivation (PBKDF2 / HKDF)
 
 You can derive a secure key from a passphrase using PBKDF2 and HKDF functions implemented in the project.
