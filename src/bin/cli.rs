@@ -17,6 +17,7 @@ enum Commands {
     VersionInfo,
     GenMnemonic,
     HealthCheck,
+    Cleanup,
     DeriveWallet { phrase: String, pass: Option<String> },
     Sign { phrase: String, pass: Option<String>, msg: String },
     Verify { pubhex: String, msg: String, sig: String },
@@ -133,6 +134,24 @@ fn main() -> Result<()> {
             println!("- Config exists: {}", cfg.exists());
             println!("- Session file exists: {}", session.exists());
             println!("- Log file exists: {}", log.exists());
+        }
+        Commands::Cleanup => {
+            use std::io::{self, Write};
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto");
+
+            println!("This will remove all logs and saved sessions from {}", dir.display());
+            print!("Type 'yes' to confirm: ");
+            io::stdout().flush().unwrap();
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+            if input.trim().to_lowercase() == "yes" {
+                let _ = std::fs::remove_file(dir.join("logs.txt"));
+                let _ = std::fs::remove_file(dir.join("session.json"));
+                println!("Cleanup completed.");
+            } else {
+                println!("Aborted.");
+            }
         }
     }
 
