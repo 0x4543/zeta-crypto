@@ -149,6 +149,60 @@ This can be useful for generating session secrets, encryption keys, or other sec
 
 ---
 
+### Version & Environment Info
+
+Show CLI version (from Cargo), Rust compiler version, and platform.
+
+```bash
+zeta-cli version-info
+```
+
+**Example output:**
+```
+Zeta Crypto CLI 0.1.0
+Rust compiler: rustc 1.82.0 (000000 2024-10-10)
+Platform: macos aarch64
+```
+
+---
+
+### Health Check
+
+Verify presence of local state files.
+
+```bash
+zeta-cli healthcheck
+```
+
+**Checks:**
+- Config exists: `~/.zeta_crypto/config.toml`
+- Session file exists: `~/.zeta_crypto/session.json`
+- Log file exists: `~/.zeta_crypto/logs.txt`
+
+---
+
+### Cleanup
+
+Remove local logs and saved sessions (asks for confirmation).
+
+```bash
+zeta-cli cleanup
+```
+
+**Prompt:**
+```
+This will remove all logs and saved sessions from ~/.zeta_crypto
+Type 'yes' to confirm:
+```
+
+---
+
+### Logging
+
+WalletConnect connect/disconnect events are logged to `~/.zeta_crypto/logs.txt` with automatic rotation (~256 KB cap).
+
+---
+
 ### License
 MIT
 
