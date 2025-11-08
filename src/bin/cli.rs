@@ -16,6 +16,7 @@ struct Cli {
 enum Commands {
     VersionInfo,
     GenMnemonic,
+    HealthCheck,
     DeriveWallet { phrase: String, pass: Option<String> },
     Sign { phrase: String, pass: Option<String>, msg: String },
     Verify { pubhex: String, msg: String, sig: String },
@@ -118,6 +119,20 @@ fn main() -> Result<()> {
             println!("Zeta Crypto CLI {}", env!("CARGO_PKG_VERSION"));
             println!("Rust compiler: {}", rustc.trim());
             println!("Platform: {} {}", env::consts::OS, env::consts::ARCH);
+        }
+        Commands::HealthCheck => {
+            use std::path::PathBuf;
+            let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+            dir.push(".zeta_crypto");
+
+            let cfg = dir.join("config.toml");
+            let session = dir.join("session.json");
+            let log = dir.join("logs.txt");
+
+            println!("Health Check:");
+            println!("- Config exists: {}", cfg.exists());
+            println!("- Session file exists: {}", session.exists());
+            println!("- Log file exists: {}", log.exists());
         }
     }
 
