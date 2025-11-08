@@ -1,47 +1,52 @@
 use crate::mnemonic::MnemonicHelper;
+use crate::signer::Signer;
+use anyhow::Result;
 use bip39::Mnemonic;
-use pbkdf2::pbkdf2_hmac;
 use hmac::Hmac;
+use k256::ecdsa::{SigningKey, VerifyingKey};
+use pbkdf2::pbkdf2;
 use sha2::Sha256;
-use k256::{ecdsa::{SigningKey, VerifyingKey}, SecretKey};
-use hex;
 
 pub struct Wallet {
-    pub secret: SecretKey,
+    sk: SigningKey,
+    pk: VerifyingKey,
 }
 
 impl Wallet {
-    pub fn from_mnemonic(mnemonic: &Mnemonic, passphrase: &str) -> Self {
-        let seed = MnemonicHelper::to_seed(mnemonic, passphrase);
-        type HmacSha256 = Hmac<Sha256>;
-        let mut out = [0u8; 32];
-        let salt = b"zeta-wallet-v0";
-        pbkdf2_hmac::<HmacSha256>(seed.as_bytes(), salt, 2048, &mut out);
-        let secret = SecretKey::from_be_bytes(&out).expect("derived bytes within curve order (demo)");
-        Self { secret }
+    pub fn from_mnemonic(mn: &Mnemonic, passphrase: &str) -> Wallet {
+        let seed = MnemonicHelper::to_seed(mn, passphrase);
+        let salt = b"zeta-crypto-wallet";
+        let mut key = [0u8; 32];
+        pbkdf2::<Hmac<Sha256>>(&seed, salt, 100_000, &mut key);
+
+        let sk = SigningKey::from_bytes(&key).expect("signing key");
+        let pk = VerifyingKey::from(&sk);
+        Wallet { sk, pk }
     }
 
-    pub fn signing_key(&self) -> SigningKey {
-        SigningKey::from(self.secret.clone())
-    }
-
-    pub fn verifying_key(&self) -> VerifyingKey {
-        VerifyingKey::from(&self.signing_key())
+    pub fn signing_key(&self) -> &SigningKey {
+        &self.sk
     }
 
     pub fn address_hex(&self) -> String {
-        use sha2::{Digest, Sha256};
-        let pubkey = self.verifying_key().to_encoded_point(false).as_bytes().to_vec();
-        let hash = Sha256::digest(&pubkey);
-        hex::encode(&hash[..20])
+        let encoded = self.pk.to_encoded_point(false);
+        hex::encode(encoded.as_bytes())
     }
 }
-impl Wallet {
-    /// Generate a random 32-byte hex key (for demo/testing purposes)
-    pub fn generate_random_hex() -> String {
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
-        let bytes: [u8; 32] = rng.gen();
-        hex::encode(bytes)
+
+pub struct MnemonicWallet;
+
+impl MnemonicWallet {
+    pub fn from_phrase(phrase: &str, passphrase: &str) -> Result<Wallet> {
+        let mn = MnemonicHelper::from_phrase(phrase)?;
+        Ok(Wallet::from_mnemonic(&mn, passphrase))
+    }
+}
+
+pub struct WalletOps;
+
+impl WalletOps {
+    pub fn sign_message(sk: &SigningKey, msg: &[u8]) -> String {
+        Signer::sign(sk, msg)
     }
 }

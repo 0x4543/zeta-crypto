@@ -1,24 +1,17 @@
 use hmac::Hmac;
-use sha2::Sha256;
-use pbkdf2::pbkdf2_hmac;
-use hex;
+use pbkdf2::pbkdf2;
+use sha2::{Sha256, Sha512};
+use hkdf::Hkdf;
 
-type HmacSha256 = Hmac<Sha256>;
-
-/// Derive a key of `output_len` bytes from given `seed` and `salt` using PBKDF2.
-pub fn derive_key_pbkdf2(seed: &[u8], salt: &[u8], iterations: u32, output_len: usize) -> String {
-    let mut out = vec![0u8; output_len];
-    pbkdf2_hmac::<HmacSha256>(seed, salt, iterations, &mut out);
-    hex::encode(out)
+pub fn derive_key_pbkdf2(pass: &str, salt: &[u8], iterations: u32, out_len: usize) -> Vec<u8> {
+    let mut out = vec![0u8; out_len];
+    pbkdf2::<Hmac<Sha256>>(pass.as_bytes(), salt, iterations, &mut out);
+    out
 }
 
-/// Derive a key of `output_len` bytes from given `seed` and `salt` using HKDF-SHA256.
-pub fn derive_key_hkdf(seed: &[u8], salt: &[u8], output_len: usize) -> String {
-    use sha2::Sha256 as H;
-    use hkdf::Hkdf;
-
-    let hk = Hkdf::<H>::new(Some(salt), seed);
-    let mut okm = vec![0u8; output_len];
-    hk.expand(&[], &mut okm).expect("HKDF expand failed");
-    hex::encode(okm)
+pub fn derive_key_hkdf(ikm: &[u8], salt: &[u8], info: &[u8], out_len: usize) -> Vec<u8> {
+    let hk = Hkdf::<Sha512>::new(Some(salt), ikm);
+    let mut okm = vec![0u8; out_len];
+    hk.expand(info, &mut okm).expect("hkdf expand");
+    okm
 }

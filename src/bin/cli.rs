@@ -1,9 +1,9 @@
-use clap::{Parser, Subcommand};
-use zeta_crypto::{MnemonicHelper, Wallet, Signer, WalletConnectSession, ZetaConfig};
 use anyhow::Result;
+use clap::{Parser, Subcommand};
 use hex;
 use std::env;
 use std::process::Command;
+use zeta_crypto::{MnemonicHelper, Signer, Wallet, WalletConnectSession, ZetaConfig};
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -18,14 +18,34 @@ enum Commands {
     GenMnemonic,
     HealthCheck,
     Cleanup,
-    DeriveWallet { phrase: String, pass: Option<String> },
-    Sign { phrase: String, pass: Option<String>, msg: String },
-    Verify { pubhex: String, msg: String, sig: String },
-    WalletConnect { peer: String, action: String },
-    WalletConnectStatus { peer: String },
-    WalletConnectInfo { peer: String },
+    DeriveWallet {
+        phrase: String,
+        pass: Option<String>,
+    },
+    Sign {
+        phrase: String,
+        pass: Option<String>,
+        msg: String,
+    },
+    Verify {
+        pubhex: String,
+        msg: String,
+        sig: String,
+    },
+    WalletConnect {
+        peer: String,
+        action: String,
+    },
+    WalletConnectStatus {
+        peer: String,
+    },
+    WalletConnectInfo {
+        peer: String,
+    },
     WalletConnectRestore,
-    WalletConnectDefault { action: String },
+    WalletConnectDefault {
+        action: String,
+    },
     ConfigShow,
 }
 
@@ -35,7 +55,7 @@ fn main() -> Result<()> {
     match cli.cmd {
         Commands::GenMnemonic => {
             let mn = MnemonicHelper::generate();
-            println!("{}", mn.phrase());
+            println!("{}", mn.to_string());
         }
         Commands::DeriveWallet { phrase, pass } => {
             let mn = MnemonicHelper::from_phrase(&phrase)?;
@@ -51,8 +71,10 @@ fn main() -> Result<()> {
         }
         Commands::Verify { pubhex, msg, sig } => {
             let bytes = hex::decode(pubhex)?;
-            let ep = k256::EncodedPoint::from_bytes(&bytes)?;
-            let vk = k256::ecdsa::VerifyingKey::from_encoded_point(&ep)?;
+            let ep = k256::EncodedPoint::from_bytes(&bytes)
+                .map_err(|e| anyhow::anyhow!("Invalid public key bytes: {:?}", e))?;
+            let vk = k256::ecdsa::VerifyingKey::from_encoded_point(&ep)
+                .map_err(|e| anyhow::anyhow!("Invalid verifying key: {:?}", e))?;
             let ok = Signer::verify(&vk, msg.as_bytes(), &sig)?;
             println!("{}", ok);
         }
@@ -79,16 +101,14 @@ fn main() -> Result<()> {
             println!("Peer: {}", peer);
             println!("Status: {}", session.status());
         }
-        Commands::WalletConnectRestore => {
-            match WalletConnectSession::from_file() {
-                Some(s) => {
-                    println!("Restored session:");
-                    println!("Peer: {}", s.peer());
-                    println!("Status: {}", s.status());
-                }
-                None => println!("No saved WalletConnect session found"),
+        Commands::WalletConnectRestore => match WalletConnectSession::from_file() {
+            Some(s) => {
+                println!("Restored session:");
+                println!("Peer: {}", s.peer());
+                println!("Status: {}", s.status());
             }
-        }
+            None => println!("No saved WalletConnect session found"),
+        },
         Commands::WalletConnectDefault { action } => {
             let cfg = ZetaConfig::load();
             match cfg.default_peer {
@@ -114,7 +134,9 @@ fn main() -> Result<()> {
             println!("{:?}", cfg);
         }
         Commands::VersionInfo => {
-            let rustc = Command::new("rustc").arg("--version").output()
+            let rustc = Command::new("rustc")
+                .arg("--version")
+                .output()
                 .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
                 .unwrap_or_else(|_| "unknown".into());
             println!("Zeta Crypto CLI {}", env!("CARGO_PKG_VERSION"));
@@ -140,7 +162,10 @@ fn main() -> Result<()> {
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto");
 
-            println!("This will remove all logs and saved sessions from {}", dir.display());
+            println!(
+                "This will remove all logs and saved sessions from {}",
+                dir.display()
+            );
             print!("Type 'yes' to confirm: ");
             io::stdout().flush().unwrap();
             let mut input = String::new();
