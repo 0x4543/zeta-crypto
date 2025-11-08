@@ -1,6 +1,5 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use hex;
 use std::env;
 use std::process::Command;
 use zeta_crypto::{MnemonicHelper, Signer, Wallet, WalletConnectSession, ZetaConfig};
@@ -55,7 +54,7 @@ fn main() -> Result<()> {
     match cli.cmd {
         Commands::GenMnemonic => {
             let mn = MnemonicHelper::generate();
-            println!("{}", mn.to_string());
+            println!("{}", mn);
         }
         Commands::DeriveWallet { phrase, pass } => {
             let mn = MnemonicHelper::from_phrase(&phrase)?;
@@ -66,15 +65,14 @@ fn main() -> Result<()> {
             let mn = MnemonicHelper::from_phrase(&phrase)?;
             let w = Wallet::from_mnemonic(&mn, pass.as_deref().unwrap_or(""));
             let sk = w.signing_key();
-            let sig = Signer::sign(&sk, msg.as_bytes());
+            let sig = Signer::sign(sk, msg.as_bytes());
             println!("{}", sig);
         }
         Commands::Verify { pubhex, msg, sig } => {
             let bytes = hex::decode(pubhex)?;
             let ep = k256::EncodedPoint::from_bytes(&bytes)
                 .map_err(|e| anyhow::anyhow!("Invalid public key bytes: {:?}", e))?;
-            let vk = k256::ecdsa::VerifyingKey::from_encoded_point(&ep)
-                .map_err(|e| anyhow::anyhow!("Invalid verifying key: {:?}", e))?;
+            let vk = k256::ecdsa::VerifyingKey::from_encoded_point(&ep)?;
             let ok = Signer::verify(&vk, msg.as_bytes(), &sig)?;
             println!("{}", ok);
         }
