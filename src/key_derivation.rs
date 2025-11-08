@@ -1,7 +1,7 @@
+use hkdf::Hkdf;
 use hmac::Hmac;
 use pbkdf2::pbkdf2;
 use sha2::{Sha256, Sha512};
-use hkdf::Hkdf;
 
 pub fn derive_key_pbkdf2(pass: &str, salt: &[u8], iterations: u32, out_len: usize) -> Vec<u8> {
     let mut out = vec![0u8; out_len];
