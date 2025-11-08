@@ -15,12 +15,11 @@ pub struct WalletConnectSession {
 
 impl WalletConnectSession {
     pub fn new(peer: &str) -> Self {
-        let s = Self {
+        Self {
             peer: peer.to_string(),
             status: "disconnected".to_string(),
             last_updated: current_timestamp(),
-        };
-        s
+        }
     }
 
     pub fn connect(&mut self) {

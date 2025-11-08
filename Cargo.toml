@@ -3,6 +3,14 @@ name = "zeta_crypto"
 version = "0.1.0"
 edition = "2021"
 
+license = "MIT"
+repository = "https://github.com/denagain/zeta-crypto"
+homepage = "https://github.com/denagain/zeta-crypto"
+readme = "README.md"
+description = "Rust-based crypto CLI playground for WalletConnect, mnemonic, and signing experiments."
+keywords = ["crypto", "wallet", "cli", "walletconnect", "rust"]
+categories = ["cryptography::cryptocurrencies", "command-line-utilities"]
+
 [dependencies]
 bip39 = "1.1"
 k256 = { version = "0.12", features = ["ecdsa"] }
