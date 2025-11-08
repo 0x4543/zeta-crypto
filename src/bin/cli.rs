@@ -2,6 +2,8 @@ use clap::{Parser, Subcommand};
 use zeta_crypto::{MnemonicHelper, Wallet, Signer, WalletConnectSession, ZetaConfig};
 use anyhow::Result;
 use hex;
+use std::env;
+use std::process::Command;
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -12,6 +14,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    VersionInfo,
     GenMnemonic,
     DeriveWallet { phrase: String, pass: Option<String> },
     Sign { phrase: String, pass: Option<String>, msg: String },
@@ -107,6 +110,14 @@ fn main() -> Result<()> {
         Commands::ConfigShow => {
             let cfg = ZetaConfig::load();
             println!("{:?}", cfg);
+        }
+        Commands::VersionInfo => {
+            let rustc = Command::new("rustc").arg("--version").output()
+                .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+                .unwrap_or_else(|_| "unknown".into());
+            println!("Zeta Crypto CLI {}", env!("CARGO_PKG_VERSION"));
+            println!("Rust compiler: {}", rustc.trim());
+            println!("Platform: {} {}", env::consts::OS, env::consts::ARCH);
         }
     }
 
