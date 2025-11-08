@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::env;
 use std::process::Command;
+use zeta_crypto::cli_utils;
 use zeta_crypto::{MnemonicHelper, Signer, Wallet, WalletConnectSession, ZetaConfig};
 
 #[derive(Parser)]
@@ -171,9 +172,9 @@ fn main() -> Result<()> {
             if input.trim().to_lowercase() == "yes" {
                 let _ = std::fs::remove_file(dir.join("logs.txt"));
                 let _ = std::fs::remove_file(dir.join("session.json"));
-                println!("Cleanup completed.");
+                cli_utils::success("Cleanup completed.");
             } else {
-                println!("Aborted.");
+                cli_utils::fail("Aborted.");
             }
         }
     }
