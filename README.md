@@ -43,6 +43,30 @@ Establish or disconnect a WalletConnect session with a peer.
 
 ---
 
+### Utility Commands
+
+These commands provide quick access to key Zeta Crypto file locations.
+
+#### Log Path
+```bash
+zeta-cli log-path
+```
+Displays the full path to the log file: `~/.zeta_crypto/logs.txt`.
+
+#### Config Path
+```bash
+zeta-cli config-path
+```
+Displays the path to the configuration file: `~/.zeta_crypto/config.toml`.
+
+#### Session Path
+```bash
+zeta-cli session-path
+```
+Displays the path to the session file: `~/.zeta_crypto/session.json`.
+
+---
+
 ### WalletConnect Status
 
 Check if a WalletConnect peer is active and reachable.
