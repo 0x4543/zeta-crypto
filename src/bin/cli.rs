@@ -49,6 +49,7 @@ enum Commands {
     ConfigShow,
     Env,
     HelpAll,
+    ClearLogs,
 }
 
 fn main() -> Result<()> {
@@ -193,7 +194,7 @@ fn main() -> Result<()> {
                 std::env::consts::ARCH
             );
         }
-                Commands::HelpAll => {
+        Commands::HelpAll => {
             println!("Zeta Crypto CLI — command overview:\n");
             println!("  gen-mnemonic              → Generate new BIP39 mnemonic");
             println!("  derive-wallet             → Derive wallet from mnemonic");
@@ -213,6 +214,31 @@ fn main() -> Result<()> {
             println!("  zeta-cli gen-mnemonic");
             println!("  zeta-cli derive-wallet --phrase \"<mnemonic>\"");
             println!("  zeta-cli walletconnect --peer <peer> --action connect");
+        }
+        Commands::ClearLogs => {
+            use std::io::{self, Write};
+            use std::path::PathBuf;
+
+            let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+            dir.push(".zeta_crypto");
+            let log_path = dir.join("logs.txt");
+
+            if log_path.exists() {
+                print!("This will clear {}. Type 'yes' to confirm: ", log_path.display());
+                io::stdout().flush().unwrap();
+
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).unwrap();
+
+                if input.trim().eq_ignore_ascii_case("yes") {
+                    std::fs::write(&log_path, "").expect("Failed to clear log file");
+                    println!("Logs cleared successfully.");
+                } else {
+                    println!("Aborted.");
+                }
+            } else {
+                println!("No logs found at {}", log_path.display());
+            }
         }
     }
 
