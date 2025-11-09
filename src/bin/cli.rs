@@ -51,6 +51,7 @@ enum Commands {
     HelpAll,
     ClearLogs,
     LogPath,
+    ConfigPath,
 }
 
 fn main() -> Result<()> {
@@ -247,6 +248,11 @@ fn main() -> Result<()> {
         Commands::LogPath => {
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto/logs.txt");
+            println!("{}", dir.display());
+        }
+        Commands::ConfigPath => {
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto/config.toml");
             println!("{}", dir.display());
         }
     }
