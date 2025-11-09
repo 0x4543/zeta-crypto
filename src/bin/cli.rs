@@ -52,6 +52,7 @@ enum Commands {
     ClearLogs,
     LogPath,
     ConfigPath,
+    SessionPath,
 }
 
 fn main() -> Result<()> {
@@ -253,6 +254,11 @@ fn main() -> Result<()> {
         Commands::ConfigPath => {
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto/config.toml");
+            println!("{}", dir.display());
+        }
+        Commands::SessionPath => {
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto/session.json");
             println!("{}", dir.display());
         }
     }
