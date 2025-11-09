@@ -50,6 +50,7 @@ enum Commands {
     Env,
     HelpAll,
     ClearLogs,
+    LogPath,
 }
 
 fn main() -> Result<()> {
@@ -242,6 +243,11 @@ fn main() -> Result<()> {
             } else {
                 println!("No logs found at {}", log_path.display());
             }
+        }
+        Commands::LogPath => {
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto/logs.txt");
+            println!("{}", dir.display());
         }
     }
 
