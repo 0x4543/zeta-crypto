@@ -48,6 +48,7 @@ enum Commands {
     },
     ConfigShow,
     Env,
+    HelpAll,
 }
 
 fn main() -> Result<()> {
@@ -191,6 +192,27 @@ fn main() -> Result<()> {
                 std::env::consts::OS,
                 std::env::consts::ARCH
             );
+        }
+                Commands::HelpAll => {
+            println!("Zeta Crypto CLI — command overview:\n");
+            println!("  gen-mnemonic              → Generate new BIP39 mnemonic");
+            println!("  derive-wallet             → Derive wallet from mnemonic");
+            println!("  sign                      → Sign a message");
+            println!("  verify                    → Verify a signature");
+            println!("  walletconnect             → Connect or disconnect a WalletConnect peer");
+            println!("  walletconnect-status       → Check WalletConnect session status");
+            println!("  walletconnect-info         → Show peer info");
+            println!("  walletconnect-restore      → Restore last saved session");
+            println!("  walletconnect-default      → Use default peer from config");
+            println!("  config-show               → Display configuration");
+            println!("  version-info              → Show version and environment info");
+            println!("  healthcheck               → Check local setup");
+            println!("  cleanup                   → Remove logs and sessions");
+            println!("  help-all                  → Show this command overview\n");
+            println!("Examples:");
+            println!("  zeta-cli gen-mnemonic");
+            println!("  zeta-cli derive-wallet --phrase \"<mnemonic>\"");
+            println!("  zeta-cli walletconnect --peer <peer> --action connect");
         }
     }
 
