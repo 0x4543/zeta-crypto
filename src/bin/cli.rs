@@ -224,7 +224,10 @@ fn main() -> Result<()> {
             let log_path = dir.join("logs.txt");
 
             if log_path.exists() {
-                print!("This will clear {}. Type 'yes' to confirm: ", log_path.display());
+                print!(
+                    "This will clear {}. Type 'yes' to confirm: ",
+                    log_path.display()
+                );
                 io::stdout().flush().unwrap();
 
                 let mut input = String::new();
