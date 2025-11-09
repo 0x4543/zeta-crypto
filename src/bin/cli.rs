@@ -47,6 +47,7 @@ enum Commands {
         action: String,
     },
     ConfigShow,
+    Env,
 }
 
 fn main() -> Result<()> {
@@ -176,6 +177,20 @@ fn main() -> Result<()> {
             } else {
                 cli_utils::fail("Aborted.");
             }
+        }
+        Commands::Env => {
+            let rustc = std::process::Command::new("rustc")
+                .arg("--version")
+                .output()
+                .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+                .unwrap_or_else(|_| "unknown".into());
+            println!("Zeta CLI version: {}", env!("CARGO_PKG_VERSION"));
+            println!("Rust compiler: {}", rustc.trim());
+            println!(
+                "Platform: {} {}",
+                std::env::consts::OS,
+                std::env::consts::ARCH
+            );
         }
     }
 
