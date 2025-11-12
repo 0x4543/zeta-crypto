@@ -53,6 +53,7 @@ enum Commands {
     LogPath,
     ConfigPath,
     SessionPath,
+    LogSize,
 }
 
 fn main() -> Result<()> {
@@ -181,6 +182,22 @@ fn main() -> Result<()> {
                 cli_utils::success("Cleanup completed.");
             } else {
                 cli_utils::fail("Aborted.");
+            }
+        }
+        Commands::LogSize => {
+            use std::path::PathBuf;
+            let mut path = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+            path.push(".zeta_crypto/logs.txt");
+            if path.exists() {
+                let metadata = std::fs::metadata(&path)?;
+                let size = metadata.len();
+                if size < 1024 {
+                    println!("Log file size: {} bytes", size);
+                } else {
+                    println!("Log file size: {:.2} KB", size as f64 / 1024.0);
+                }
+            } else {
+                println!("Log file not found at {}", path.display());
             }
         }
         Commands::Env => {
