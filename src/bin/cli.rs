@@ -55,6 +55,7 @@ enum Commands {
     SessionPath,
     LogSize,
     CachePath,
+    DataDir,
 }
 
 fn main() -> Result<()> {
@@ -282,6 +283,11 @@ fn main() -> Result<()> {
         Commands::CachePath => {
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto/cache");
+            println!("{}", dir.display());
+        }
+        Commands::DataDir => {
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto");
             println!("{}", dir.display());
         }
     }
