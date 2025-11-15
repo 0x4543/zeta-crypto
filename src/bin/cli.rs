@@ -56,6 +56,7 @@ enum Commands {
     LogSize,
     CachePath,
     DataDir,
+    ListFiles,
 }
 
 fn main() -> Result<()> {
@@ -289,6 +290,21 @@ fn main() -> Result<()> {
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto");
             println!("{}", dir.display());
+        }
+        Commands::ListFiles => {
+            use std::fs;
+
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto");
+
+            match fs::read_dir(&dir) {
+                Ok(entries) => {
+                    for entry in entries.flatten() {
+                        println!("{}", entry.path().display());
+                    }
+                }
+                Err(_) => println!("Directory not found: {}", dir.display()),
+            }
         }
     }
 
