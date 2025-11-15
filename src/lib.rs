@@ -19,3 +19,9 @@ pub fn build_info() -> String {
     let target = format!("{} {}", std::env::consts::OS, std::env::consts::ARCH);
     format!("zeta-crypto {} | target {}", version, target)
 }
+
+pub fn system_info() -> String {
+    let cpus = num_cpus::get();
+    let pid = std::process::id();
+    format!("cpus {} | pid {}", cpus, pid)
+}
