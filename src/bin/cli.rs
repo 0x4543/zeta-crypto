@@ -59,6 +59,7 @@ enum Commands {
     ListFiles,
     CpuCores,
     Timestamp,
+    ConfigExists,
 }
 
 fn main() -> Result<()> {
@@ -318,6 +319,11 @@ fn main() -> Result<()> {
                 .unwrap()
                 .as_secs();
             println!("{}", now);
+        }
+        Commands::ConfigExists => {
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto/config.toml");
+            println!("{}", dir.exists());
         }
     }
 
