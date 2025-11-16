@@ -57,6 +57,7 @@ enum Commands {
     CachePath,
     DataDir,
     ListFiles,
+    CpuCores,
 }
 
 fn main() -> Result<()> {
@@ -305,6 +306,10 @@ fn main() -> Result<()> {
                 }
                 Err(_) => println!("Directory not found: {}", dir.display()),
             }
+        }
+        Commands::CpuCores => {
+            let cores = num_cpus::get();
+            println!("{}", cores);
         }
     }
 
