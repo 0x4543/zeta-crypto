@@ -62,6 +62,7 @@ enum Commands {
     ConfigExists,
     SessionExists,
     LogsExist,
+    ConfigDir,
 }
 
 fn main() -> Result<()> {
@@ -336,6 +337,11 @@ fn main() -> Result<()> {
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto/logs.txt");
             println!("{}", dir.exists());
+        }
+        Commands::ConfigDir => {
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto");
+            println!("{}", dir.display());
         }
     }
 
