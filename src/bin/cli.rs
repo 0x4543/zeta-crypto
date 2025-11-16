@@ -58,6 +58,7 @@ enum Commands {
     DataDir,
     ListFiles,
     CpuCores,
+    Timestamp,
 }
 
 fn main() -> Result<()> {
@@ -310,6 +311,13 @@ fn main() -> Result<()> {
         Commands::CpuCores => {
             let cores = num_cpus::get();
             println!("{}", cores);
+        }
+        Commands::Timestamp => {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            println!("{}", now);
         }
     }
 
