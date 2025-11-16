@@ -60,6 +60,7 @@ enum Commands {
     CpuCores,
     Timestamp,
     ConfigExists,
+    SessionExists,
 }
 
 fn main() -> Result<()> {
@@ -323,6 +324,11 @@ fn main() -> Result<()> {
         Commands::ConfigExists => {
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto/config.toml");
+            println!("{}", dir.exists());
+        }
+        Commands::SessionExists => {
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            dir.push(".zeta_crypto/session.json");
             println!("{}", dir.exists());
         }
     }
