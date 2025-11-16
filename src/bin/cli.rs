@@ -46,6 +46,9 @@ enum Commands {
     WalletConnectDefault {
         action: String,
     },
+    WalletConnectLastUpdated {
+        peer: String,
+    },
     ConfigShow,
     Env,
     HelpAll,
@@ -143,6 +146,10 @@ fn main() -> Result<()> {
                     println!("No default_peer found in config. Create ~/.zeta_crypto/config.toml with e.g.:\n\ndefault_peer = \"wc:example@2?relay-protocol=irn&symKey=...\"\nauto_connect = true");
                 }
             }
+        }
+        Commands::WalletConnectLastUpdated { peer } => {
+            let session = WalletConnectSession::new(&peer);
+            println!("{}", session.last_updated());
         }
         Commands::ConfigShow => {
             let cfg = ZetaConfig::load();

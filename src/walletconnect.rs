@@ -53,6 +53,10 @@ impl WalletConnectSession {
         serde_json::from_str(&content).ok()
     }
 
+    pub fn last_updated(&self) -> u64 {
+        self.last_updated
+    }
+
     fn save_to_file(&self) {
         let path = session_file_path();
         if let Some(parent) = path.parent() {
