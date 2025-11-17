@@ -49,6 +49,9 @@ enum Commands {
     WalletConnectLastUpdated {
         peer: String,
     },
+    WalletConnectSave {
+        peer: String,
+    },
     ConfigShow,
     Env,
     HelpAll,
@@ -150,6 +153,14 @@ fn main() -> Result<()> {
         Commands::WalletConnectLastUpdated { peer } => {
             let session = WalletConnectSession::new(&peer);
             println!("{}", session.last_updated());
+        }
+        Commands::WalletConnectSave { peer } => {
+            let session = WalletConnectSession::new(&peer);
+            if let Err(e) = session.save_to_file() {
+                println!("Failed to save session: {}", e);
+            } else {
+                println!("Session saved.");
+            }
         }
         Commands::ConfigShow => {
             let cfg = ZetaConfig::load();

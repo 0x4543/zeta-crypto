@@ -57,14 +57,11 @@ impl WalletConnectSession {
         self.last_updated
     }
 
-    fn save_to_file(&self) {
-        let path = session_file_path();
-        if let Some(parent) = path.parent() {
-            let _ = fs::create_dir_all(parent);
-        }
-        if let Ok(json) = serde_json::to_string_pretty(self) {
-            let _ = fs::write(path, json);
-        }
+    pub fn save_to_file(&self) -> std::io::Result<()> {
+        let mut path = dirs::home_dir().unwrap_or_default();
+        path.push(".zeta_crypto/session.json");
+        let encoded = serde_json::to_string_pretty(self).unwrap();
+        std::fs::write(path, encoded)
     }
 }
 
