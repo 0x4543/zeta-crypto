@@ -52,6 +52,9 @@ enum Commands {
     WalletConnectSave {
         peer: String,
     },
+    WalletConnectIsDefault {
+        peer: String,
+    },
     ConfigShow,
     Env,
     HelpAll,
@@ -113,9 +116,9 @@ fn main() -> Result<()> {
             let session = WalletConnectSession::new(&peer);
             let connected = session.status().contains("connected");
             if connected {
-                println!("✅ WalletConnect peer is active and reachable");
+                println!("WalletConnect peer is active and reachable");
             } else {
-                println!("⚠️ Unable to reach peer or session inactive");
+                println!("Unable to reach peer or session inactive");
             }
         }
         Commands::WalletConnectInfo { peer } => {
@@ -147,20 +150,23 @@ fn main() -> Result<()> {
                     println!("{}", session.status());
                 }
                 None => {
-                    println!("No default_peer found in config. Create ~/.zeta_crypto/config.toml with e.g.:\n\ndefault_peer = \"wc:example@2?relay-protocol=irn&symKey=...\"\nauto_connect = true");
+                    println!("No default_peer found in config.");
                 }
             }
         }
         Commands::WalletConnectLastUpdated { peer } => {
             let session = WalletConnectSession::new(&peer);
-            println!("{}", session.last_updated());
+            println!("{}", session.status());
         }
         Commands::WalletConnectSave { peer } => {
-            let session = WalletConnectSession::new(&peer);
-            if let Err(e) = session.save_to_file() {
-                println!("Failed to save session: {}", e);
-            } else {
-                println!("Session saved.");
+            println!("Not implemented.");
+            println!("Requested peer: {}", peer);
+        }
+        Commands::WalletConnectIsDefault { peer } => {
+            let cfg = ZetaConfig::load();
+            match cfg.default_peer {
+                Some(p) if p == peer => println!("true"),
+                _ => println!("false"),
             }
         }
         Commands::ConfigShow => {
@@ -175,7 +181,11 @@ fn main() -> Result<()> {
                 .unwrap_or_else(|_| "unknown".into());
             println!("Zeta Crypto CLI {}", env!("CARGO_PKG_VERSION"));
             println!("Rust compiler: {}", rustc.trim());
-            println!("Platform: {} {}", env::consts::OS, env::consts::ARCH);
+            println!(
+                "Platform: {} {}",
+                std::env::consts::OS,
+                std::env::consts::ARCH
+            );
         }
         Commands::HealthCheck => {
             use std::path::PathBuf;
@@ -213,23 +223,22 @@ fn main() -> Result<()> {
             }
         }
         Commands::LogSize => {
-            use std::path::PathBuf;
-            let mut path = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+            let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
             if path.exists() {
                 let metadata = std::fs::metadata(&path)?;
                 let size = metadata.len();
                 if size < 1024 {
-                    println!("Log file size: {} bytes", size);
+                    println!("{} bytes", size);
                 } else {
-                    println!("Log file size: {:.2} KB", size as f64 / 1024.0);
+                    println!("{:.2} KB", size as f64 / 1024.0);
                 }
             } else {
-                println!("Log file not found at {}", path.display());
+                println!("Log file not found");
             }
         }
         Commands::Env => {
-            let rustc = std::process::Command::new("rustc")
+            let rustc = Command::new("rustc")
                 .arg("--version")
                 .output()
                 .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
@@ -243,92 +252,77 @@ fn main() -> Result<()> {
             );
         }
         Commands::HelpAll => {
-            println!("Zeta Crypto CLI — command overview:\n");
-            println!("  gen-mnemonic              → Generate new BIP39 mnemonic");
-            println!("  derive-wallet             → Derive wallet from mnemonic");
-            println!("  sign                      → Sign a message");
-            println!("  verify                    → Verify a signature");
-            println!("  walletconnect             → Connect or disconnect a WalletConnect peer");
-            println!("  walletconnect-status       → Check WalletConnect session status");
-            println!("  walletconnect-info         → Show peer info");
-            println!("  walletconnect-restore      → Restore last saved session");
-            println!("  walletconnect-default      → Use default peer from config");
-            println!("  config-show               → Display configuration");
-            println!("  version-info              → Show version and environment info");
-            println!("  healthcheck               → Check local setup");
-            println!("  cleanup                   → Remove logs and sessions");
-            println!("  help-all                  → Show this command overview\n");
-            println!("Examples:");
-            println!("  zeta-cli gen-mnemonic");
-            println!("  zeta-cli derive-wallet --phrase \"<mnemonic>\"");
-            println!("  zeta-cli walletconnect --peer <peer> --action connect");
+            println!("Commands:");
+            println!("gen-mnemonic");
+            println!("derive-wallet");
+            println!("sign");
+            println!("verify");
+            println!("walletconnect");
+            println!("walletconnect-status");
+            println!("walletconnect-info");
+            println!("walletconnect-restore");
+            println!("walletconnect-default");
+            println!("config-show");
+            println!("version-info");
+            println!("healthcheck");
+            println!("cleanup");
+            println!("help-all");
         }
         Commands::ClearLogs => {
             use std::io::{self, Write};
-            use std::path::PathBuf;
-
-            let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-            dir.push(".zeta_crypto");
-            let log_path = dir.join("logs.txt");
-
-            if log_path.exists() {
-                print!(
-                    "This will clear {}. Type 'yes' to confirm: ",
-                    log_path.display()
-                );
+            let mut dir = dirs::home_dir().unwrap_or_default();
+            dir.push(".zeta_crypto/logs.txt");
+            if dir.exists() {
+                print!("This will clear logs. Type 'yes' to confirm: ");
                 io::stdout().flush().unwrap();
-
                 let mut input = String::new();
                 io::stdin().read_line(&mut input).unwrap();
-
                 if input.trim().eq_ignore_ascii_case("yes") {
-                    std::fs::write(&log_path, "").expect("Failed to clear log file");
-                    println!("Logs cleared successfully.");
+                    std::fs::write(&dir, "")?;
+                    println!("Logs cleared.");
                 } else {
                     println!("Aborted.");
                 }
             } else {
-                println!("No logs found at {}", log_path.display());
+                println!("No logs found.");
             }
         }
         Commands::LogPath => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto/logs.txt");
             println!("{}", dir.display());
         }
         Commands::ConfigPath => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto/config.toml");
             println!("{}", dir.display());
         }
         Commands::SessionPath => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto/session.json");
             println!("{}", dir.display());
         }
         Commands::CachePath => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto/cache");
             println!("{}", dir.display());
         }
         Commands::DataDir => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto");
             println!("{}", dir.display());
         }
         Commands::ListFiles => {
             use std::fs;
-
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto");
-
             match fs::read_dir(&dir) {
-                Ok(entries) => {
-                    for entry in entries.flatten() {
+                Ok(list) => {
+                    for entry in list.flatten() {
                         println!("{}", entry.path().display());
                     }
                 }
-                Err(_) => println!("Directory not found: {}", dir.display()),
+                Err(_) => println!("Directory not found"),
             }
         }
         Commands::CpuCores => {
@@ -343,40 +337,42 @@ fn main() -> Result<()> {
             println!("{}", now);
         }
         Commands::ConfigExists => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-            dir.push(".zeta_crypto/config.toml");
-            println!("{}", dir.exists());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/config.toml");
+            println!("{}", path.exists());
         }
         Commands::SessionExists => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-            dir.push(".zeta_crypto/session.json");
-            println!("{}", dir.exists());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/session.json");
+            println!("{}", path.exists());
         }
         Commands::LogsExist => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-            dir.push(".zeta_crypto/logs.txt");
-            println!("{}", dir.exists());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+            println!("{}", path.exists());
         }
         Commands::ConfigDir => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-            dir.push(".zeta_crypto");
-            println!("{}", dir.display());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto");
+            println!("{}", path.display());
         }
         Commands::WalletConnectOpenLog => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
-
             if !path.exists() {
-                println!("Log file not found.");
+                println!("Log file not found");
                 return Ok(());
             }
 
-            #[cfg(target_os = "macos")]
-            let cmd = "open";
+            let mut cmd = "open";
             #[cfg(target_os = "linux")]
-            let cmd = "xdg-open";
+            {
+                cmd = "xdg-open";
+            }
             #[cfg(target_os = "windows")]
-            let cmd = "start";
+            {
+                cmd = "start";
+            }
 
             let _ = std::process::Command::new(cmd)
                 .arg(path.to_string_lossy().to_string())
