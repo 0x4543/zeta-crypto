@@ -69,6 +69,7 @@ enum Commands {
     SessionExists,
     LogsExist,
     ConfigDir,
+    WalletConnectOpenLog,
 }
 
 fn main() -> Result<()> {
@@ -360,6 +361,28 @@ fn main() -> Result<()> {
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto");
             println!("{}", dir.display());
+        }
+        Commands::WalletConnectOpenLog => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+
+            if !path.exists() {
+                println!("Log file not found.");
+                return Ok(());
+            }
+
+            #[cfg(target_os = "macos")]
+            let cmd = "open";
+            #[cfg(target_os = "linux")]
+            let cmd = "xdg-open";
+            #[cfg(target_os = "windows")]
+            let cmd = "start";
+
+            let _ = std::process::Command::new(cmd)
+                .arg(path.to_string_lossy().to_string())
+                .spawn();
+
+            println!("Opening log file...");
         }
     }
 
