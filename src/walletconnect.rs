@@ -25,15 +25,15 @@ impl WalletConnectSession {
     pub fn connect(&mut self) {
         self.status = "connected".to_string();
         self.last_updated = current_timestamp();
-        self.save_to_file();
-        log_event(&format!("connect peer={}", self.peer));
+        let _ = self.save_to_file();
+        let _ = log_event(&format!("connect peer={}", self.peer));
     }
 
     pub fn disconnect(&mut self) {
         self.status = "disconnected".to_string();
         self.last_updated = current_timestamp();
-        self.save_to_file();
-        log_event(&format!("disconnect peer={}", self.peer));
+        let _ = self.save_to_file();
+        let _ = log_event(&format!("disconnect peer={}", self.peer));
     }
 
     pub fn status(&self) -> String {
