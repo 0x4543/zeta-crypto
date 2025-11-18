@@ -316,15 +316,27 @@ fn main() -> Result<()> {
         }
         Commands::ListFiles => {
             use std::fs;
+
             let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto");
-            match fs::read_dir(&dir) {
-                Ok(list) => {
-                    for entry in list.flatten() {
-                        println!("{}", entry.path().display());
-                    }
+
+            let entries = match fs::read_dir(&dir) {
+                Ok(e) => e,
+                Err(_) => {
+                    println!("Directory not found");
+                    return Ok(());
                 }
-                Err(_) => println!("Directory not found"),
+            };
+
+            let mut files: Vec<String> = entries
+                .flatten()
+                .filter_map(|e| e.file_name().into_string().ok())
+                .collect();
+
+            files.sort();
+
+            for f in files {
+                println!("{}", f);
             }
         }
         Commands::CpuCores => {
