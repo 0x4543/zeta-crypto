@@ -373,20 +373,26 @@ fn main() -> Result<()> {
         Commands::WalletConnectOpenLog => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
+
             if !path.exists() {
                 println!("Log file not found");
                 return Ok(());
             }
 
-            let mut cmd = "open";
-            #[cfg(target_os = "linux")]
-            {
-                cmd = "xdg-open";
-            }
-            #[cfg(target_os = "windows")]
-            {
-                cmd = "start";
-            }
+            let cmd = {
+                #[cfg(target_os = "macos")]
+                {
+                    "open"
+                }
+                #[cfg(target_os = "linux")]
+                {
+                    "xdg-open"
+                }
+                #[cfg(target_os = "windows")]
+                {
+                    "start"
+                }
+            };
 
             let _ = std::process::Command::new(cmd)
                 .arg(path.to_string_lossy().to_string())
