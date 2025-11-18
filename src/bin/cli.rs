@@ -271,7 +271,8 @@ fn main() -> Result<()> {
         Commands::ClearLogs => {
             use std::io::{self, Write};
             let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto/logs.txt");
+            dir.push(".zeta_crypto");
+            dir.push("logs.txt");
             if dir.exists() {
                 print!("This will clear logs. Type 'yes' to confirm: ");
                 io::stdout().flush().unwrap();
@@ -289,7 +290,8 @@ fn main() -> Result<()> {
         }
         Commands::LogPath => {
             let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto/logs.txt");
+            dir.push(".zeta_crypto");
+            dir.push("logs.txt");
             println!("{}", dir.display());
         }
         Commands::ConfigPath => {
