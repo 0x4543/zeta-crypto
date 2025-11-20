@@ -73,6 +73,7 @@ enum Commands {
     LogsExist,
     ConfigDir,
     WalletConnectOpenLog,
+    ShowPeer,
 }
 
 fn main() -> Result<()> {
@@ -399,6 +400,13 @@ fn main() -> Result<()> {
                 .spawn();
 
             println!("Opening log file...");
+        }
+        Commands::ShowPeer => {
+            let cfg = ZetaConfig::load();
+            match cfg.default_peer {
+                Some(p) => println!("{}", p),
+                None => println!("No default peer set"),
+            }
         }
     }
 
