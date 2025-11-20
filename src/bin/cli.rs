@@ -197,9 +197,9 @@ fn main() -> Result<()> {
             let log = dir.join("logs.txt");
 
             println!("Health Check:");
-            println!("- Config exists: {}", cfg.exists());
-            println!("- Session file exists: {}", session.exists());
-            println!("- Log file exists: {}", log.exists());
+            println!("config.toml:     {}", cfg.exists());
+            println!("session.json:    {}", session.exists());
+            println!("logs.txt:        {}", log.exists());
         }
         Commands::Cleanup => {
             use std::io::{self, Write};
