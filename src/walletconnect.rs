@@ -63,6 +63,10 @@ impl WalletConnectSession {
         let encoded = serde_json::to_string_pretty(self).unwrap();
         std::fs::write(path, encoded)
     }
+
+    pub fn is_connected(&self) -> bool {
+        self.status == "connected"
+    }
 }
 
 fn current_timestamp() -> u64 {
