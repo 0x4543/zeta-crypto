@@ -150,9 +150,7 @@ fn main() -> Result<()> {
                     }
                     println!("{}", session.status());
                 }
-                None => {
-                    println!("No default_peer found in config.");
-                }
+                None => println!("No default_peer found in config."),
             }
         }
         Commands::WalletConnectLastUpdated { peer } => {
@@ -182,11 +180,7 @@ fn main() -> Result<()> {
                 .unwrap_or_else(|_| "unknown".into());
             println!("Zeta Crypto CLI {}", env!("CARGO_PKG_VERSION"));
             println!("Rust compiler: {}", rustc.trim());
-            println!(
-                "Platform: {} {}",
-                std::env::consts::OS,
-                std::env::consts::ARCH
-            );
+            println!("Platform: {} {}", env::consts::OS, env::consts::ARCH);
         }
         Commands::HealthCheck => {
             use std::path::PathBuf;
@@ -272,8 +266,7 @@ fn main() -> Result<()> {
         Commands::ClearLogs => {
             use std::io::{self, Write};
             let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto");
-            dir.push("logs.txt");
+            dir.push(".zeta_crypto/logs.txt");
             if dir.exists() {
                 print!("This will clear logs. Type 'yes' to confirm: ");
                 io::stdout().flush().unwrap();
@@ -291,8 +284,7 @@ fn main() -> Result<()> {
         }
         Commands::LogPath => {
             let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto");
-            dir.push("logs.txt");
+            dir.push(".zeta_crypto/logs.txt");
             println!("{}", dir.display());
         }
         Commands::ConfigPath => {
