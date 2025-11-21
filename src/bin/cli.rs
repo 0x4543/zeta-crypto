@@ -74,6 +74,10 @@ enum Commands {
     ConfigDir,
     WalletConnectOpenLog,
     ShowPeer,
+    PrintAddress {
+        phrase: String,
+        pass: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -180,7 +184,11 @@ fn main() -> Result<()> {
                 .unwrap_or_else(|_| "unknown".into());
             println!("Zeta Crypto CLI {}", env!("CARGO_PKG_VERSION"));
             println!("Rust compiler: {}", rustc.trim());
-            println!("Platform: {} {}", env::consts::OS, env::consts::ARCH);
+            println!(
+                "Platform: {} {}",
+                std::env::consts::OS,
+                std::env::consts::ARCH
+            );
         }
         Commands::HealthCheck => {
             use std::path::PathBuf;
@@ -265,15 +273,15 @@ fn main() -> Result<()> {
         }
         Commands::ClearLogs => {
             use std::io::{self, Write};
-            let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto/logs.txt");
-            if dir.exists() {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+            if path.exists() {
                 print!("This will clear logs. Type 'yes' to confirm: ");
                 io::stdout().flush().unwrap();
                 let mut input = String::new();
                 io::stdin().read_line(&mut input).unwrap();
                 if input.trim().eq_ignore_ascii_case("yes") {
-                    std::fs::write(&dir, "")?;
+                    std::fs::write(&path, "")?;
                     println!("Logs cleared.");
                 } else {
                     println!("Aborted.");
@@ -283,29 +291,29 @@ fn main() -> Result<()> {
             }
         }
         Commands::LogPath => {
-            let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto/logs.txt");
-            println!("{}", dir.display());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+            println!("{}", path.display());
         }
         Commands::ConfigPath => {
-            let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto/config.toml");
-            println!("{}", dir.display());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/config.toml");
+            println!("{}", path.display());
         }
         Commands::SessionPath => {
-            let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto/session.json");
-            println!("{}", dir.display());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/session.json");
+            println!("{}", path.display());
         }
         Commands::CachePath => {
-            let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto/cache");
-            println!("{}", dir.display());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/cache");
+            println!("{}", path.display());
         }
         Commands::DataDir => {
-            let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto");
-            println!("{}", dir.display());
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto");
+            println!("{}", path.display());
         }
         Commands::ListFiles => {
             use std::fs;
@@ -399,6 +407,11 @@ fn main() -> Result<()> {
                 Some(p) => println!("{}", p),
                 None => println!("No default peer set"),
             }
+        }
+        Commands::PrintAddress { phrase, pass } => {
+            let mn = MnemonicHelper::from_phrase(&phrase)?;
+            let w = Wallet::from_mnemonic(&mn, pass.as_deref().unwrap_or(""));
+            println!("{}", w.address_hex());
         }
     }
 
