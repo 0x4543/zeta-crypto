@@ -47,6 +47,7 @@ enum Commands {
     WalletConnectDefault {
         action: String,
     },
+    WalletConnectLast,
     WalletConnectLastUpdated {
         peer: String,
     },
@@ -160,6 +161,10 @@ fn main() -> Result<()> {
                 None => println!("No default_peer found in config."),
             }
         }
+        Commands::WalletConnectLast => match WalletConnectSession::from_file() {
+            Some(s) => println!("{}", s.last_updated()),
+            None => println!("0"),
+        },
         Commands::WalletConnectLastUpdated { peer } => {
             let session = WalletConnectSession::new(&peer);
             println!("{}", session.status());
