@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use sha2::Digest;
 use std::env;
 use std::process::Command;
 use zeta_crypto::cli_utils;
@@ -56,6 +57,7 @@ enum Commands {
         peer: String,
     },
     WalletConnectAlive,
+    WalletConnectPeerHash,
     ConfigShow,
     Env,
     HelpAll,
@@ -420,6 +422,13 @@ fn main() -> Result<()> {
             let w = Wallet::from_mnemonic(&mn, pass.as_deref().unwrap_or(""));
             println!("{}", w.address_hex());
         }
+        Commands::WalletConnectPeerHash => match WalletConnectSession::from_file() {
+            Some(s) => {
+                let hash = hex::encode(sha2::Sha256::digest(s.peer().as_bytes()));
+                println!("{}", &hash[0..16]);
+            }
+            None => println!("No saved session"),
+        },
     }
 
     Ok(())
