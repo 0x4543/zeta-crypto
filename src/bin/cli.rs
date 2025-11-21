@@ -55,6 +55,7 @@ enum Commands {
     WalletConnectIsDefault {
         peer: String,
     },
+    WalletConnectAlive,
     ConfigShow,
     Env,
     HelpAll,
@@ -172,6 +173,12 @@ fn main() -> Result<()> {
                 _ => println!("false"),
             }
         }
+        Commands::WalletConnectAlive => match WalletConnectSession::from_file() {
+            Some(s) if s.status().contains("connected") => {
+                println!("true");
+            }
+            _ => println!("false"),
+        },
         Commands::ConfigShow => {
             let cfg = ZetaConfig::load();
             println!("{:?}", cfg);
