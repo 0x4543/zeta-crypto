@@ -77,6 +77,7 @@ enum Commands {
     LogsExist,
     ConfigDir,
     WalletConnectOpenLog,
+    WalletConnectActive,
     ShowPeer,
     PrintAddress {
         phrase: String,
@@ -433,6 +434,16 @@ fn main() -> Result<()> {
                 println!("{}", &hash[0..16]);
             }
             None => println!("No saved session"),
+        },
+        Commands::WalletConnectActive => match WalletConnectSession::from_file() {
+            Some(s) => {
+                if s.status().contains("connected") {
+                    println!("true");
+                } else {
+                    println!("false");
+                }
+            }
+            None => println!("false"),
         },
     }
 
