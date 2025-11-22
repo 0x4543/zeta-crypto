@@ -86,6 +86,7 @@ enum Commands {
         phrase: String,
         pass: Option<String>,
     },
+    LogCount,
 }
 
 fn main() -> Result<()> {
@@ -456,6 +457,17 @@ fn main() -> Result<()> {
             } else {
                 println!("disconnected");
             }
+        }
+        Commands::LogCount => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+            if !path.exists() {
+                println!("0");
+                return Ok(());
+            }
+            let content = std::fs::read_to_string(&path)?;
+            let count = content.lines().count();
+            println!("{}", count);
         }
     }
 
