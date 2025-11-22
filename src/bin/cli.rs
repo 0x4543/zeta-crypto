@@ -57,6 +57,9 @@ enum Commands {
     WalletConnectIsDefault {
         peer: String,
     },
+    WalletConnectShortStatus {
+        peer: String,
+    },
     WalletConnectAlive,
     WalletConnectPeerHash,
     ConfigShow,
@@ -445,6 +448,15 @@ fn main() -> Result<()> {
             }
             None => println!("false"),
         },
+        Commands::WalletConnectShortStatus { peer } => {
+            let session = WalletConnectSession::new(&peer);
+            let s = session.status();
+            if s.contains("connected") {
+                println!("connected");
+            } else {
+                println!("disconnected");
+            }
+        }
     }
 
     Ok(())
