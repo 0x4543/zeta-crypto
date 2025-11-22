@@ -62,6 +62,9 @@ enum Commands {
     },
     WalletConnectAlive,
     WalletConnectPeerHash,
+    WalletConnectPeerUpper {
+        peer: String,
+    },
     ConfigShow,
     Env,
     HelpAll,
@@ -468,6 +471,9 @@ fn main() -> Result<()> {
             let content = std::fs::read_to_string(&path)?;
             let count = content.lines().count();
             println!("{}", count);
+        }
+        Commands::WalletConnectPeerUpper { peer } => {
+            println!("{}", peer.to_uppercase());
         }
     }
 
