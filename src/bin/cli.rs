@@ -94,6 +94,7 @@ enum Commands {
     },
     LogCount,
     SessionSize,
+    Cwd,
 }
 
 fn main() -> Result<()> {
@@ -489,6 +490,11 @@ fn main() -> Result<()> {
                 println!("{}", meta.len());
             } else {
                 println!("0");
+            }
+        }
+        Commands::Cwd => {
+            if let Ok(path) = std::env::current_dir() {
+                println!("{}", path.display());
             }
         }
     }
