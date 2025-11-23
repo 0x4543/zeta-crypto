@@ -65,6 +65,9 @@ enum Commands {
     WalletConnectPeerUpper {
         peer: String,
     },
+    WalletConnectPeerLen {
+        peer: String,
+    },
     ConfigShow,
     Env,
     HelpAll,
@@ -460,6 +463,9 @@ fn main() -> Result<()> {
             } else {
                 println!("disconnected");
             }
+        }
+        Commands::WalletConnectPeerLen { peer } => {
+            println!("{}", peer.len());
         }
         Commands::LogCount => {
             let mut path = dirs::home_dir().unwrap_or_default();
