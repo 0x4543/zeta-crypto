@@ -93,6 +93,7 @@ enum Commands {
         pass: Option<String>,
     },
     LogCount,
+    SessionSize,
 }
 
 fn main() -> Result<()> {
@@ -480,6 +481,15 @@ fn main() -> Result<()> {
         }
         Commands::WalletConnectPeerUpper { peer } => {
             println!("{}", peer.to_uppercase());
+        }
+        Commands::SessionSize => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/session.json");
+            if let Ok(meta) = std::fs::metadata(&path) {
+                println!("{}", meta.len());
+            } else {
+                println!("0");
+            }
         }
     }
 
