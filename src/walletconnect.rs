@@ -4,7 +4,7 @@ use std::io::{Seek, Write};
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const LOG_MAX_BYTES: u64 = 262_144; // ~256 KB
+const LOG_MAX_BYTES: u64 = 262_144;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WalletConnectSession {
@@ -26,14 +26,14 @@ impl WalletConnectSession {
         self.status = "connected".to_string();
         self.last_updated = current_timestamp();
         let _ = self.save_to_file();
-        let _ = log_event(&format!("connect peer={}", self.peer));
+        log_event(&format!("connect peer={}", self.peer));
     }
 
     pub fn disconnect(&mut self) {
         self.status = "disconnected".to_string();
         self.last_updated = current_timestamp();
         let _ = self.save_to_file();
-        let _ = log_event(&format!("disconnect peer={}", self.peer));
+        log_event(&format!("disconnect peer={}", self.peer));
     }
 
     pub fn status(&self) -> String {
@@ -96,7 +96,6 @@ fn log_rotate_if_needed(path: &PathBuf) {
             let mut rotated = path.clone();
             rotated.set_file_name("logs.1.txt");
             let _ = fs::rename(path, rotated);
-            // recreate empty file
             let _ = fs::File::create(path);
         }
     }
