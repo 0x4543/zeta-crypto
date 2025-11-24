@@ -97,6 +97,7 @@ enum Commands {
     Cwd,
     ConfigSize,
     SessionModified,
+    DataFileCount,
 }
 
 fn main() -> Result<()> {
@@ -517,6 +518,16 @@ fn main() -> Result<()> {
                         println!("{}", secs.as_secs());
                     }
                 }
+            }
+        }
+        Commands::DataFileCount => {
+            let mut dir = dirs::home_dir().unwrap_or_default();
+            dir.push(".zeta_crypto");
+            if let Ok(read) = std::fs::read_dir(&dir) {
+                let count = read.count();
+                println!("{}", count);
+            } else {
+                println!("0");
             }
         }
     }
