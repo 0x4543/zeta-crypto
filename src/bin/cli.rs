@@ -95,6 +95,7 @@ enum Commands {
     LogCount,
     SessionSize,
     Cwd,
+    ConfigSize,
 }
 
 fn main() -> Result<()> {
@@ -495,6 +496,15 @@ fn main() -> Result<()> {
         Commands::Cwd => {
             if let Ok(path) = std::env::current_dir() {
                 println!("{}", path.display());
+            }
+        }
+        Commands::ConfigSize => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/config.toml");
+            if let Ok(meta) = std::fs::metadata(&path) {
+                println!("{}", meta.len());
+            } else {
+                println!("0");
             }
         }
     }
