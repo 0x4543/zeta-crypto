@@ -96,6 +96,7 @@ enum Commands {
     SessionSize,
     Cwd,
     ConfigSize,
+    SessionModified,
 }
 
 fn main() -> Result<()> {
@@ -505,6 +506,17 @@ fn main() -> Result<()> {
                 println!("{}", meta.len());
             } else {
                 println!("0");
+            }
+        }
+        Commands::SessionModified => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/session.json");
+            if let Ok(meta) = std::fs::metadata(&path) {
+                if let Ok(time) = meta.modified() {
+                    if let Ok(secs) = time.duration_since(std::time::UNIX_EPOCH) {
+                        println!("{}", secs.as_secs());
+                    }
+                }
             }
         }
     }
