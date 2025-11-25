@@ -4,8 +4,9 @@ use sha2::Digest;
 use std::env;
 use std::process::Command;
 use zeta_crypto::cli_utils;
-use zeta_crypto::{MnemonicHelper, Signer, Wallet, WalletConnectSession, ZetaConfig};
+use zeta_crypto::{WalletConnectSession, ZetaConfig};
 
+use zeta_crypto::crypto_cmd;
 use zeta_crypto::version::print_version_info;
 
 #[derive(Parser)]
@@ -107,28 +108,19 @@ fn main() -> Result<()> {
 
     match cli.cmd {
         Commands::GenMnemonic => {
-            let mn = MnemonicHelper::generate();
-            println!("{}", mn);
+            crypto_cmd::handle_gen_mnemonic()?;
         }
         Commands::DeriveWallet { phrase, pass } => {
-            let mn = MnemonicHelper::from_phrase(&phrase)?;
-            let w = Wallet::from_mnemonic(&mn, pass.as_deref().unwrap_or(""));
-            println!("{}", w.address_hex());
+            crypto_cmd::handle_derive_wallet(&phrase, pass.as_deref())?;
         }
         Commands::Sign { phrase, pass, msg } => {
-            let mn = MnemonicHelper::from_phrase(&phrase)?;
-            let w = Wallet::from_mnemonic(&mn, pass.as_deref().unwrap_or(""));
-            let sk = w.signing_key();
-            let sig = Signer::sign(sk, msg.as_bytes());
-            println!("{}", sig);
+            crypto_cmd::handle_sign(&phrase, pass.as_deref(), &msg)?;
         }
         Commands::Verify { pubhex, msg, sig } => {
-            let bytes = hex::decode(pubhex)?;
-            let ep = k256::EncodedPoint::from_bytes(&bytes)
-                .map_err(|e| anyhow::anyhow!("Invalid public key bytes: {:?}", e))?;
-            let vk = k256::ecdsa::VerifyingKey::from_encoded_point(&ep)?;
-            let ok = Signer::verify(&vk, msg.as_bytes(), &sig)?;
-            println!("{}", ok);
+            crypto_cmd::handle_verify(&pubhex, &msg, &sig)?;
+        }
+        Commands::PrintAddress { phrase, pass } => {
+            crypto_cmd::handle_print_address(&phrase, pass.as_deref())?;
         }
         Commands::WalletConnect { peer, action } => {
             let mut session = WalletConnectSession::new(&peer);
@@ -427,11 +419,6 @@ fn main() -> Result<()> {
                 Some(p) => println!("{}", p),
                 None => println!("No default peer set"),
             }
-        }
-        Commands::PrintAddress { phrase, pass } => {
-            let mn = MnemonicHelper::from_phrase(&phrase)?;
-            let w = Wallet::from_mnemonic(&mn, pass.as_deref().unwrap_or(""));
-            println!("{}", w.address_hex());
         }
         Commands::WalletConnectPeerHash => match WalletConnectSession::from_file() {
             Some(s) => {
