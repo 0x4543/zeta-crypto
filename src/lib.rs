@@ -25,3 +25,4 @@ pub fn system_info() -> String {
     let pid = std::process::id();
     format!("cpus {} | pid {}", cpus, pid)
 }
+pub mod version;
