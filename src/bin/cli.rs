@@ -6,6 +6,8 @@ use std::process::Command;
 use zeta_crypto::cli_utils;
 use zeta_crypto::{MnemonicHelper, Signer, Wallet, WalletConnectSession, ZetaConfig};
 
+use zeta_crypto::version::print_version_info;
+
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
 struct Cli {
@@ -206,18 +208,7 @@ fn main() -> Result<()> {
             println!("{:?}", cfg);
         }
         Commands::VersionInfo => {
-            let rustc = Command::new("rustc")
-                .arg("--version")
-                .output()
-                .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
-                .unwrap_or_else(|_| "unknown".into());
-            println!("Zeta Crypto CLI {}", env!("CARGO_PKG_VERSION"));
-            println!("Rust compiler: {}", rustc.trim());
-            println!(
-                "Platform: {} {}",
-                std::env::consts::OS,
-                std::env::consts::ARCH
-            );
+            print_version_info();
         }
         Commands::HealthCheck => {
             use std::path::PathBuf;
