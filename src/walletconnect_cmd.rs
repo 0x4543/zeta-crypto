@@ -1,5 +1,5 @@
+use crate::{WalletConnectSession, ZetaConfig};
 use anyhow::Result;
-use crate::WalletConnectSession;
 
 pub fn handle_status(peer: String) -> Result<()> {
     let session = WalletConnectSession::new(&peer);
@@ -24,4 +24,36 @@ pub fn handle_last() -> Result<()> {
         None => println!("0"),
     }
     Ok(())
+}
+
+pub fn handle_default(action: &str) {
+    let cfg = ZetaConfig::load();
+    match cfg.default_peer {
+        Some(peer) => {
+            let mut session = WalletConnectSession::new(&peer);
+            match action {
+                "connect" => session.connect(),
+                "disconnect" => session.disconnect(),
+                _ => {
+                    println!("Unknown action");
+                    return;
+                }
+            }
+            println!("{}", session.status());
+        }
+        None => println!("No default_peer found in config."),
+    }
+}
+
+pub fn handle_alive() {
+    match WalletConnectSession::from_file() {
+        Some(s) => {
+            if s.is_connected() {
+                println!("true");
+            } else {
+                println!("false");
+            }
+        }
+        None => println!("false"),
+    }
 }
