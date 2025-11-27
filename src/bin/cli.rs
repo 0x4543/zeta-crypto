@@ -147,22 +147,7 @@ fn main() -> Result<()> {
             None => println!("No saved WalletConnect session found"),
         },
         Commands::WalletConnectDefault { action } => {
-            let cfg = ZetaConfig::load();
-            match cfg.default_peer {
-                Some(peer) => {
-                    let mut session = WalletConnectSession::new(&peer);
-                    match action.as_str() {
-                        "connect" => session.connect(),
-                        "disconnect" => session.disconnect(),
-                        _ => {
-                            println!("Unknown action: {}", action);
-                            return Ok(());
-                        }
-                    }
-                    println!("{}", session.status());
-                }
-                None => println!("No default_peer found in config."),
-            }
+            walletconnect_cmd::handle_default(&action);
         }
         Commands::WalletConnectLast => {
             walletconnect_cmd::handle_last()?;
@@ -182,12 +167,9 @@ fn main() -> Result<()> {
                 _ => println!("false"),
             }
         }
-        Commands::WalletConnectAlive => match WalletConnectSession::from_file() {
-            Some(s) if s.is_connected() => {
-                println!("true");
-            }
-            _ => println!("false"),
-        },
+        Commands::WalletConnectAlive => {
+            walletconnect_cmd::handle_alive();
+        }
         Commands::ConfigShow => {
             let cfg = ZetaConfig::load();
             println!("{:?}", cfg);
