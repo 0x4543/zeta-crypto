@@ -8,6 +8,7 @@ use zeta_crypto::{WalletConnectSession, ZetaConfig};
 
 use zeta_crypto::crypto_cmd;
 use zeta_crypto::version::print_version_info;
+use zeta_crypto::walletconnect_cmd;
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -132,17 +133,10 @@ fn main() -> Result<()> {
             println!("{}", session.status());
         }
         Commands::WalletConnectStatus { peer } => {
-            let session = WalletConnectSession::new(&peer);
-            if session.is_connected() {
-                println!("WalletConnect peer is active and reachable");
-            } else {
-                println!("Unable to reach peer or session inactive");
-            }
+            walletconnect_cmd::handle_status(peer)?;
         }
         Commands::WalletConnectInfo { peer } => {
-            let session = WalletConnectSession::new(&peer);
-            println!("Peer: {}", peer);
-            println!("Status: {}", session.status());
+            walletconnect_cmd::handle_info(peer)?;
         }
         Commands::WalletConnectRestore => match WalletConnectSession::from_file() {
             Some(s) => {
@@ -170,10 +164,9 @@ fn main() -> Result<()> {
                 None => println!("No default_peer found in config."),
             }
         }
-        Commands::WalletConnectLast => match WalletConnectSession::from_file() {
-            Some(s) => println!("{}", s.last_updated()),
-            None => println!("0"),
-        },
+        Commands::WalletConnectLast => {
+            walletconnect_cmd::handle_last()?;
+        }
         Commands::WalletConnectLastUpdated { peer } => {
             let session = WalletConnectSession::new(&peer);
             println!("{}", session.status());

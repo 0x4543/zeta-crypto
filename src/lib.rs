@@ -28,3 +28,4 @@ pub fn system_info() -> String {
 
 pub mod version;
 pub mod crypto_cmd;
+pub mod walletconnect_cmd;
