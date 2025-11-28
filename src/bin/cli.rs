@@ -413,12 +413,7 @@ fn main() -> Result<()> {
             None => println!("false"),
         },
         Commands::WalletConnectShortStatus { peer } => {
-            let session = WalletConnectSession::new(&peer);
-            if session.is_connected() {
-                println!("connected");
-            } else {
-                println!("disconnected");
-            }
+            walletconnect_cmd::handle_short_status(peer)?;
         }
         Commands::WalletConnectPeerLen { peer } => {
             println!("{}", peer.len());
