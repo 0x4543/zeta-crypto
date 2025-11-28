@@ -57,3 +57,13 @@ pub fn handle_alive() {
         None => println!("false"),
     }
 }
+
+pub fn handle_short_status(peer: String) -> Result<()> {
+    let session = WalletConnectSession::new(&peer);
+    if session.is_connected() {
+        println!("connected");
+    } else {
+        println!("disconnected");
+    }
+    Ok(())
+}
