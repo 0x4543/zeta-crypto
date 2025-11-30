@@ -75,3 +75,15 @@ pub fn handle_peer_len(peer: &str) {
 pub fn handle_peer_upper(peer: &str) {
     println!("{}", peer.to_uppercase());
 }
+
+use sha2::Digest;
+
+pub fn handle_peer_hash() {
+    match WalletConnectSession::from_file() {
+        Some(s) => {
+            let hash = hex::encode(sha2::Sha256::digest(s.peer().as_bytes()));
+            println!("{}", &hash[0..16]);
+        }
+        None => println!("No saved session"),
+    }
+}

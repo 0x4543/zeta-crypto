@@ -395,13 +395,9 @@ fn main() -> Result<()> {
                 None => println!("No default peer set"),
             }
         }
-        Commands::WalletConnectPeerHash => match WalletConnectSession::from_file() {
-            Some(s) => {
-                let hash = hex::encode(sha2::Sha256::digest(s.peer().as_bytes()));
-                println!("{}", &hash[0..16]);
-            }
-            None => println!("No saved session"),
-        },
+        Commands::WalletConnectPeerHash => {
+            walletconnect_cmd::handle_peer_hash();
+        }
         Commands::WalletConnectActive => match WalletConnectSession::from_file() {
             Some(s) => {
                 if s.is_connected() {
