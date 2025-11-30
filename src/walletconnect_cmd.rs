@@ -67,3 +67,7 @@ pub fn handle_short_status(peer: String) -> Result<()> {
     }
     Ok(())
 }
+
+pub fn handle_peer_len(peer: &str) {
+    println!("{}", peer.len());
+}

@@ -416,7 +416,7 @@ fn main() -> Result<()> {
             walletconnect_cmd::handle_short_status(peer)?;
         }
         Commands::WalletConnectPeerLen { peer } => {
-            println!("{}", peer.len());
+            walletconnect_cmd::handle_peer_len(&peer);
         }
         Commands::LogCount => {
             let mut path = dirs::home_dir().unwrap_or_default();
