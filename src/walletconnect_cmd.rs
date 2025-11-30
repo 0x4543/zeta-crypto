@@ -71,3 +71,7 @@ pub fn handle_short_status(peer: String) -> Result<()> {
 pub fn handle_peer_len(peer: &str) {
     println!("{}", peer.len());
 }
+
+pub fn handle_peer_upper(peer: &str) {
+    println!("{}", peer.to_uppercase());
+}

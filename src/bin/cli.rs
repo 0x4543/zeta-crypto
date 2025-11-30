@@ -430,7 +430,7 @@ fn main() -> Result<()> {
             println!("{}", count);
         }
         Commands::WalletConnectPeerUpper { peer } => {
-            println!("{}", peer.to_uppercase());
+            walletconnect_cmd::handle_peer_upper(&peer);
         }
         Commands::SessionSize => {
             let mut path = dirs::home_dir().unwrap_or_default();
