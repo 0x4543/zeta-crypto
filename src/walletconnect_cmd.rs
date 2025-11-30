@@ -1,5 +1,6 @@
 use crate::{WalletConnectSession, ZetaConfig};
 use anyhow::Result;
+use sha2::Digest;
 
 pub fn handle_status(peer: String) -> Result<()> {
     let session = WalletConnectSession::new(&peer);
@@ -58,6 +59,27 @@ pub fn handle_alive() {
     }
 }
 
+pub fn handle_active() {
+    match WalletConnectSession::from_file() {
+        Some(s) => {
+            if s.is_connected() {
+                println!("true");
+            } else {
+                println!("false");
+            }
+        }
+        None => println!("false"),
+    }
+}
+
+pub fn handle_is_default(peer: &str) {
+    let cfg = ZetaConfig::load();
+    match cfg.default_peer {
+        Some(p) if p == peer => println!("true"),
+        _ => println!("false"),
+    }
+}
+
 pub fn handle_short_status(peer: String) -> Result<()> {
     let session = WalletConnectSession::new(&peer);
     if session.is_connected() {
@@ -68,6 +90,12 @@ pub fn handle_short_status(peer: String) -> Result<()> {
     Ok(())
 }
 
+pub fn handle_last_updated(peer: &str) -> Result<()> {
+    let session = WalletConnectSession::new(peer);
+    println!("{}", session.status());
+    Ok(())
+}
+
 pub fn handle_peer_len(peer: &str) {
     println!("{}", peer.len());
 }
@@ -75,8 +103,6 @@ pub fn handle_peer_len(peer: &str) {
 pub fn handle_peer_upper(peer: &str) {
     println!("{}", peer.to_uppercase());
 }
-
-use sha2::Digest;
 
 pub fn handle_peer_hash() {
     match WalletConnectSession::from_file() {
