@@ -1,7 +1,5 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use sha2::Digest;
-use std::env;
 use std::process::Command;
 use zeta_crypto::cli_utils;
 use zeta_crypto::{WalletConnectSession, ZetaConfig};
@@ -153,19 +151,14 @@ fn main() -> Result<()> {
             walletconnect_cmd::handle_last()?;
         }
         Commands::WalletConnectLastUpdated { peer } => {
-            let session = WalletConnectSession::new(&peer);
-            println!("{}", session.status());
+            walletconnect_cmd::handle_last_updated(&peer)?;
         }
         Commands::WalletConnectSave { peer } => {
             println!("Not implemented.");
             println!("Requested peer: {}", peer);
         }
         Commands::WalletConnectIsDefault { peer } => {
-            let cfg = ZetaConfig::load();
-            match cfg.default_peer {
-                Some(p) if p == peer => println!("true"),
-                _ => println!("false"),
-            }
+            walletconnect_cmd::handle_is_default(&peer);
         }
         Commands::WalletConnectAlive => {
             walletconnect_cmd::handle_alive();
@@ -398,16 +391,9 @@ fn main() -> Result<()> {
         Commands::WalletConnectPeerHash => {
             walletconnect_cmd::handle_peer_hash();
         }
-        Commands::WalletConnectActive => match WalletConnectSession::from_file() {
-            Some(s) => {
-                if s.is_connected() {
-                    println!("true");
-                } else {
-                    println!("false");
-                }
-            }
-            None => println!("false"),
-        },
+        Commands::WalletConnectActive => {
+            walletconnect_cmd::handle_active();
+        }
         Commands::WalletConnectShortStatus { peer } => {
             walletconnect_cmd::handle_short_status(peer)?;
         }
