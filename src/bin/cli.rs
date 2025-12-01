@@ -1,7 +1,5 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use sha2::Digest;
-use std::env;
 use std::process::Command;
 use zeta_crypto::cli_utils;
 use zeta_crypto::{WalletConnectSession, ZetaConfig};
@@ -179,20 +177,16 @@ fn main() -> Result<()> {
         Commands::VersionInfo => {
             print_version_info();
         }
-
         Commands::HealthCheck => {
-            use std::path::PathBuf;
-            let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto");
             let cfg = dir.join("config.toml");
             let session = dir.join("session.json");
             let log = dir.join("logs.txt");
             fs_manage_cmd::health_report(cfg, session, log);
         }
-
         Commands::Cleanup => {
-            use std::path::PathBuf;
-            let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto");
             if fs_manage_cmd::confirm("Type yes to confirm: ") {
                 fs_manage_cmd::cleanup(dir);
@@ -201,14 +195,11 @@ fn main() -> Result<()> {
                 cli_utils::fail("Aborted.");
             }
         }
-
         Commands::ClearLogs => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
             fs_manage_cmd::clear_logs(path);
-            println!("Logs cleared.");
         }
-
         Commands::LogPath => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
@@ -224,13 +215,11 @@ fn main() -> Result<()> {
             path.push(".zeta_crypto/session.json");
             println!("{}", path.display());
         }
-
         Commands::LogSize => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
             println!("{}", fs_cmd::file_size(path));
         }
-
         Commands::CachePath => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/cache");
@@ -241,16 +230,13 @@ fn main() -> Result<()> {
             path.push(".zeta_crypto");
             println!("{}", path.display());
         }
-
         Commands::ListFiles => {
-            use std::path::PathBuf;
             let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto");
             for f in fs_cmd::list_files(dir) {
                 println!("{}", f);
             }
         }
-
         Commands::CpuCores => {
             let cores = num_cpus::get();
             println!("{}", cores);
@@ -262,7 +248,6 @@ fn main() -> Result<()> {
                 .as_secs();
             println!("{}", now);
         }
-
         Commands::ConfigExists => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/config.toml");
@@ -278,19 +263,16 @@ fn main() -> Result<()> {
             path.push(".zeta_crypto/logs.txt");
             println!("{}", fs_cmd::health_exists(path));
         }
-
         Commands::ConfigDir => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto");
             println!("{}", path.display());
         }
-
         Commands::WalletConnectOpenLog => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
             fs_manage_cmd::open_log(path);
         }
-
         Commands::ShowPeer => {
             let cfg = ZetaConfig::load();
             match cfg.default_peer {
@@ -298,11 +280,9 @@ fn main() -> Result<()> {
                 None => println!("No default peer set"),
             }
         }
-
         Commands::WalletConnectPeerHash => {
             walletconnect_cmd::handle_peer_hash();
         }
-
         Commands::WalletConnectActive => match WalletConnectSession::from_file() {
             Some(s) => {
                 if s.is_connected() {
@@ -313,41 +293,33 @@ fn main() -> Result<()> {
             }
             None => println!("false"),
         },
-
         Commands::WalletConnectShortStatus { peer } => {
             walletconnect_cmd::handle_short_status(peer)?;
         }
-
         Commands::WalletConnectPeerLen { peer } => {
             walletconnect_cmd::handle_peer_len(&peer);
         }
-
         Commands::LogCount => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
             println!("{}", fs_cmd::log_count(path));
         }
-
         Commands::WalletConnectPeerUpper { peer } => {
             walletconnect_cmd::handle_peer_upper(&peer);
         }
-
         Commands::SessionSize => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/session.json");
             println!("{}", fs_cmd::file_size(path));
         }
-
         Commands::Cwd => {
             println!("{}", fs_cmd::cwd());
         }
-
         Commands::ConfigSize => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/config.toml");
             println!("{}", fs_cmd::file_size(path));
         }
-
         Commands::SessionModified => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/session.json");
@@ -359,7 +331,6 @@ fn main() -> Result<()> {
                 }
             }
         }
-
         Commands::DataFileCount => {
             let mut dir = dirs::home_dir().unwrap_or_default();
             dir.push(".zeta_crypto");
@@ -379,7 +350,6 @@ fn main() -> Result<()> {
                 std::env::consts::ARCH
             );
         }
-
         Commands::HelpAll => {
             println!("Commands:");
             println!("gen-mnemonic");
