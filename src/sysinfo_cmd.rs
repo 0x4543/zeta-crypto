@@ -1,5 +1,13 @@
 use anyhow::Result;
 use std::process::Command;
+use std::io::{self, Write};
+use crate::version;
+use crate::cli_utils;
+
+pub fn handle_version() -> Result<()> {
+    version::print_version_info();
+    Ok(())
+}
 
 pub fn handle_health_check() -> Result<()> {
     use std::path::PathBuf;
@@ -30,8 +38,29 @@ pub fn handle_env() -> Result<()> {
     Ok(())
 }
 
+pub fn handle_cleanup() -> Result<()> {
+    let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+    dir.push(".zeta_crypto");
+
+    println!(
+        "This will remove all logs and saved sessions from {}",
+        dir.display()
+    );
+    print!("Type 'yes' to confirm: ");
+    io::stdout().flush().unwrap();
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+    if input.trim().to_lowercase() == "yes" {
+        let _ = std::fs::remove_file(dir.join("logs.txt"));
+        let _ = std::fs::remove_file(dir.join("session.json"));
+        cli_utils::success("Cleanup completed.");
+    } else {
+        cli_utils::fail("Aborted.");
+    }
+    Ok(())
+}
+
 pub fn handle_clear_logs() -> Result<()> {
-    use std::io::{self, Write};
     let mut path = dirs::home_dir().unwrap_or_default();
     path.push(".zeta_crypto/logs.txt");
 
@@ -59,6 +88,36 @@ pub fn handle_log_path() -> Result<()> {
     let mut path = dirs::home_dir().unwrap_or_default();
     path.push(".zeta_crypto/logs.txt");
     println!("{}", path.display());
+    Ok(())
+}
+
+pub fn handle_log_size() -> Result<()> {
+    let mut path = dirs::home_dir().unwrap_or_default();
+    path.push(".zeta_crypto/logs.txt");
+    if path.exists() {
+        let metadata = std::fs::metadata(&path)?;
+        let size = metadata.len();
+        if size < 1024 {
+            println!("{} bytes", size);
+        } else {
+            println!("{:.2} KB", size as f64 / 1024.0);
+        }
+    } else {
+        println!("Log file not found");
+    }
+    Ok(())
+}
+
+pub fn handle_log_count() -> Result<()> {
+    let mut path = dirs::home_dir().unwrap_or_default();
+    path.push(".zeta_crypto/logs.txt");
+    if !path.exists() {
+        println!("0");
+        return Ok(());
+    }
+    let content = std::fs::read_to_string(&path)?;
+    let count = content.lines().count();
+    println!("{}", count);
     Ok(())
 }
 
