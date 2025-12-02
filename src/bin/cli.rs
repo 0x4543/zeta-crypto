@@ -3,7 +3,6 @@ use clap::{Parser, Subcommand};
 use zeta_crypto::crypto_cmd;
 use zeta_crypto::sysinfo_cmd;
 use zeta_crypto::walletconnect_cmd;
-use zeta_crypto::ZetaConfig;
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -149,8 +148,7 @@ fn main() -> Result<()> {
             walletconnect_cmd::handle_alive();
         }
         Commands::ConfigShow => {
-            let cfg = ZetaConfig::load();
-            println!("{:?}", cfg);
+            sysinfo_cmd::handle_config_show()?;
         }
         Commands::VersionInfo => sysinfo_cmd::handle_version()?,
         Commands::HealthCheck => sysinfo_cmd::handle_health_check()?,
@@ -198,21 +196,7 @@ fn main() -> Result<()> {
             walletconnect_cmd::handle_peer_upper(&peer);
         }
         Commands::HelpAll => {
-            println!("Commands:");
-            println!("gen-mnemonic");
-            println!("derive-wallet");
-            println!("sign");
-            println!("verify");
-            println!("walletconnect");
-            println!("walletconnect-status");
-            println!("walletconnect-info");
-            println!("walletconnect-restore");
-            println!("walletconnect-default");
-            println!("config-show");
-            println!("version-info");
-            println!("healthcheck");
-            println!("cleanup");
-            println!("help-all");
+            sysinfo_cmd::handle_help_all()?;
         }
     }
 
