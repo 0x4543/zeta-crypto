@@ -1,12 +1,21 @@
-pub mod cli_utils;
 pub mod config;
 pub mod key_derivation;
 pub mod mnemonic;
 pub mod signer;
 pub mod wallet;
 pub mod walletconnect;
+pub mod version;
+
+pub mod cli_utils;
+
+pub mod crypto_cmd;
+pub mod fs_cmd;
+pub mod fs_manage_cmd;
+pub mod sysinfo_cmd;
+pub mod walletconnect_cmd;
 
 pub use cli_utils::*;
+
 pub use config::ZetaConfig;
 pub use key_derivation::{derive_key_hkdf, derive_key_pbkdf2};
 pub use mnemonic::MnemonicHelper;
@@ -25,9 +34,3 @@ pub fn system_info() -> String {
     let pid = std::process::id();
     format!("cpus {} | pid {}", cpus, pid)
 }
-
-pub mod version;
-pub mod crypto_cmd;
-pub mod walletconnect_cmd;
-pub mod fs_cmd;
-pub mod fs_manage_cmd;
