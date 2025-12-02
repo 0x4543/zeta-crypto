@@ -1,5 +1,6 @@
 use crate::cli_utils;
 use crate::version;
+use crate::ZetaConfig;
 use anyhow::Result;
 use std::io::{self, Write};
 use std::process::Command;
@@ -273,5 +274,30 @@ pub fn handle_data_file_count() -> Result<()> {
     } else {
         println!("0");
     }
+    Ok(())
+}
+
+pub fn handle_config_show() -> Result<()> {
+    let cfg = ZetaConfig::load();
+    println!("{:?}", cfg);
+    Ok(())
+}
+
+pub fn handle_help_all() -> Result<()> {
+    println!("Commands:");
+    println!("gen-mnemonic");
+    println!("derive-wallet");
+    println!("sign");
+    println!("verify");
+    println!("walletconnect");
+    println!("walletconnect-status");
+    println!("walletconnect-info");
+    println!("walletconnect-restore");
+    println!("walletconnect-default");
+    println!("config-show");
+    println!("version-info");
+    println!("healthcheck");
+    println!("cleanup");
+    println!("help-all");
     Ok(())
 }
