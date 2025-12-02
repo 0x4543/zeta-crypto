@@ -1,11 +1,9 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use sha2::Digest;
-use std::process::Command;
 use zeta_crypto::crypto_cmd;
 use zeta_crypto::sysinfo_cmd;
 use zeta_crypto::walletconnect_cmd;
-use zeta_crypto::{WalletConnectSession, ZetaConfig};
+use zeta_crypto::ZetaConfig;
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -121,13 +119,7 @@ fn main() -> Result<()> {
             crypto_cmd::handle_print_address(&phrase, pass.as_deref())?;
         }
         Commands::WalletConnect { peer, action } => {
-            let mut session = WalletConnectSession::new(&peer);
-            match action.as_str() {
-                "connect" => session.connect(),
-                "disconnect" => session.disconnect(),
-                _ => println!("Unknown action: {}", action),
-            }
-            println!("{}", session.status());
+            walletconnect_cmd::handle_action(peer, action)?;
         }
         Commands::WalletConnectStatus { peer } => {
             walletconnect_cmd::handle_status(peer)?;
@@ -135,14 +127,9 @@ fn main() -> Result<()> {
         Commands::WalletConnectInfo { peer } => {
             walletconnect_cmd::handle_info(peer)?;
         }
-        Commands::WalletConnectRestore => match WalletConnectSession::from_file() {
-            Some(s) => {
-                println!("Restored session:");
-                println!("Peer: {}", s.peer());
-                println!("Status: {}", s.status());
-            }
-            None => println!("No saved WalletConnect session found"),
-        },
+        Commands::WalletConnectRestore => {
+            walletconnect_cmd::handle_restore()?;
+        }
         Commands::WalletConnectDefault { action } => {
             walletconnect_cmd::handle_default(&action);
         }
@@ -150,19 +137,13 @@ fn main() -> Result<()> {
             walletconnect_cmd::handle_last()?;
         }
         Commands::WalletConnectLastUpdated { peer } => {
-            let session = WalletConnectSession::new(&peer);
-            println!("{}", session.status());
+            walletconnect_cmd::handle_last_updated(&peer)?;
         }
         Commands::WalletConnectSave { peer } => {
-            println!("Not implemented.");
-            println!("Requested peer: {}", peer);
+            walletconnect_cmd::handle_save(peer);
         }
         Commands::WalletConnectIsDefault { peer } => {
-            let cfg = ZetaConfig::load();
-            match cfg.default_peer {
-                Some(p) if p == peer => println!("true"),
-                _ => println!("false"),
-            }
+            walletconnect_cmd::handle_is_default(&peer);
         }
         Commands::WalletConnectAlive => {
             walletconnect_cmd::handle_alive();
@@ -195,6 +176,27 @@ fn main() -> Result<()> {
         Commands::ConfigSize => sysinfo_cmd::handle_config_size()?,
         Commands::SessionModified => sysinfo_cmd::handle_session_modified()?,
         Commands::DataFileCount => sysinfo_cmd::handle_data_file_count()?,
+        Commands::WalletConnectOpenLog => {
+            walletconnect_cmd::handle_open_log()?;
+        }
+        Commands::ShowPeer => {
+            walletconnect_cmd::handle_show_default_peer();
+        }
+        Commands::WalletConnectPeerHash => {
+            walletconnect_cmd::handle_peer_hash();
+        }
+        Commands::WalletConnectActive => {
+            walletconnect_cmd::handle_active();
+        }
+        Commands::WalletConnectShortStatus { peer } => {
+            walletconnect_cmd::handle_short_status(peer)?;
+        }
+        Commands::WalletConnectPeerLen { peer } => {
+            walletconnect_cmd::handle_peer_len(&peer);
+        }
+        Commands::WalletConnectPeerUpper { peer } => {
+            walletconnect_cmd::handle_peer_upper(&peer);
+        }
         Commands::HelpAll => {
             println!("Commands:");
             println!("gen-mnemonic");
@@ -211,74 +213,6 @@ fn main() -> Result<()> {
             println!("healthcheck");
             println!("cleanup");
             println!("help-all");
-        }
-        Commands::WalletConnectOpenLog => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/logs.txt");
-
-            if !path.exists() {
-                println!("Log file not found");
-                return Ok(());
-            }
-
-            let cmd = {
-                #[cfg(target_os = "macos")]
-                {
-                    "open"
-                }
-                #[cfg(target_os = "linux")]
-                {
-                    "xdg-open"
-                }
-                #[cfg(target_os = "windows")]
-                {
-                    "start"
-                }
-            };
-
-            let _ = Command::new(cmd)
-                .arg(path.to_string_lossy().to_string())
-                .spawn();
-
-            println!("Opening log file...");
-        }
-        Commands::ShowPeer => {
-            let cfg = ZetaConfig::load();
-            match cfg.default_peer {
-                Some(p) => println!("{}", p),
-                None => println!("No default peer set"),
-            }
-        }
-        Commands::WalletConnectPeerHash => match WalletConnectSession::from_file() {
-            Some(s) => {
-                let hash = hex::encode(sha2::Sha256::digest(s.peer().as_bytes()));
-                println!("{}", &hash[0..16]);
-            }
-            None => println!("No saved session"),
-        },
-        Commands::WalletConnectActive => match WalletConnectSession::from_file() {
-            Some(s) => {
-                if s.is_connected() {
-                    println!("true");
-                } else {
-                    println!("false");
-                }
-            }
-            None => println!("false"),
-        },
-        Commands::WalletConnectShortStatus { peer } => {
-            let session = WalletConnectSession::new(&peer);
-            if session.is_connected() {
-                println!("connected");
-            } else {
-                println!("disconnected");
-            }
-        }
-        Commands::WalletConnectPeerLen { peer } => {
-            println!("{}", peer.len());
-        }
-        Commands::WalletConnectPeerUpper { peer } => {
-            println!("{}", peer.to_uppercase());
         }
     }
 
