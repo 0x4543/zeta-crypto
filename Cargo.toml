@@ -2,7 +2,6 @@
 name = "zeta_crypto"
 version = "0.1.0"
 edition = "2021"
-
 license = "MIT"
 repository = "https://github.com/denagain/zeta-crypto"
 homepage = "https://github.com/denagain/zeta-crypto"
@@ -36,3 +35,10 @@ path = "src/lib.rs"
 [[bin]]
 name = "zeta-cli"
 path = "src/bin/cli.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
+codegen-units = 1
+panic = "abort"
