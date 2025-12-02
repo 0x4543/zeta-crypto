@@ -1,12 +1,12 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use sha2::Digest;
+use std::env;
 use std::process::Command;
 use zeta_crypto::cli_utils;
 use zeta_crypto::{WalletConnectSession, ZetaConfig};
 
 use zeta_crypto::crypto_cmd;
-use zeta_crypto::fs_cmd;
-use zeta_crypto::fs_manage_cmd;
 use zeta_crypto::version::print_version_info;
 use zeta_crypto::walletconnect_cmd;
 
@@ -178,163 +178,54 @@ fn main() -> Result<()> {
             print_version_info();
         }
         Commands::HealthCheck => {
-            let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+            use std::path::PathBuf;
+            let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
             dir.push(".zeta_crypto");
+
             let cfg = dir.join("config.toml");
             let session = dir.join("session.json");
             let log = dir.join("logs.txt");
-            fs_manage_cmd::health_report(cfg, session, log);
+
+            println!("Health Check:");
+            println!("config.toml:     {}", cfg.exists());
+            println!("session.json:    {}", session.exists());
+            println!("logs.txt:        {}", log.exists());
         }
         Commands::Cleanup => {
+            use std::io::{self, Write};
             let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
             dir.push(".zeta_crypto");
-            if fs_manage_cmd::confirm("Type yes to confirm: ") {
-                fs_manage_cmd::cleanup(dir);
+
+            println!(
+                "This will remove all logs and saved sessions from {}",
+                dir.display()
+            );
+            print!("Type 'yes' to confirm: ");
+            io::stdout().flush().unwrap();
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+            if input.trim().to_lowercase() == "yes" {
+                let _ = std::fs::remove_file(dir.join("logs.txt"));
+                let _ = std::fs::remove_file(dir.join("session.json"));
                 cli_utils::success("Cleanup completed.");
             } else {
                 cli_utils::fail("Aborted.");
             }
         }
-        Commands::ClearLogs => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/logs.txt");
-            fs_manage_cmd::clear_logs(path);
-        }
-        Commands::LogPath => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/logs.txt");
-            println!("{}", path.display());
-        }
-        Commands::ConfigPath => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/config.toml");
-            println!("{}", path.display());
-        }
-        Commands::SessionPath => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/session.json");
-            println!("{}", path.display());
-        }
         Commands::LogSize => {
             let mut path = dirs::home_dir().unwrap_or_default();
             path.push(".zeta_crypto/logs.txt");
-            println!("{}", fs_cmd::file_size(path));
-        }
-        Commands::CachePath => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/cache");
-            println!("{}", path.display());
-        }
-        Commands::DataDir => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto");
-            println!("{}", path.display());
-        }
-        Commands::ListFiles => {
-            let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto");
-            for f in fs_cmd::list_files(dir) {
-                println!("{}", f);
-            }
-        }
-        Commands::CpuCores => {
-            let cores = num_cpus::get();
-            println!("{}", cores);
-        }
-        Commands::Timestamp => {
-            let now = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs();
-            println!("{}", now);
-        }
-        Commands::ConfigExists => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/config.toml");
-            println!("{}", fs_cmd::health_exists(path));
-        }
-        Commands::SessionExists => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/session.json");
-            println!("{}", fs_cmd::health_exists(path));
-        }
-        Commands::LogsExist => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/logs.txt");
-            println!("{}", fs_cmd::health_exists(path));
-        }
-        Commands::ConfigDir => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto");
-            println!("{}", path.display());
-        }
-        Commands::WalletConnectOpenLog => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/logs.txt");
-            fs_manage_cmd::open_log(path);
-        }
-        Commands::ShowPeer => {
-            let cfg = ZetaConfig::load();
-            match cfg.default_peer {
-                Some(p) => println!("{}", p),
-                None => println!("No default peer set"),
-            }
-        }
-        Commands::WalletConnectPeerHash => {
-            walletconnect_cmd::handle_peer_hash();
-        }
-        Commands::WalletConnectActive => match WalletConnectSession::from_file() {
-            Some(s) => {
-                if s.is_connected() {
-                    println!("true");
+            if path.exists() {
+                let metadata = std::fs::metadata(&path)?;
+                let size = metadata.len();
+                if size < 1024 {
+                    println!("{} bytes", size);
                 } else {
-                    println!("false");
+                    println!("{:.2} KB", size as f64 / 1024.0);
                 }
+            } else {
+                println!("Log file not found");
             }
-            None => println!("false"),
-        },
-        Commands::WalletConnectShortStatus { peer } => {
-            walletconnect_cmd::handle_short_status(peer)?;
-        }
-        Commands::WalletConnectPeerLen { peer } => {
-            walletconnect_cmd::handle_peer_len(&peer);
-        }
-        Commands::LogCount => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/logs.txt");
-            println!("{}", fs_cmd::log_count(path));
-        }
-        Commands::WalletConnectPeerUpper { peer } => {
-            walletconnect_cmd::handle_peer_upper(&peer);
-        }
-        Commands::SessionSize => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/session.json");
-            println!("{}", fs_cmd::file_size(path));
-        }
-        Commands::Cwd => {
-            println!("{}", fs_cmd::cwd());
-        }
-        Commands::ConfigSize => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/config.toml");
-            println!("{}", fs_cmd::file_size(path));
-        }
-        Commands::SessionModified => {
-            let mut path = dirs::home_dir().unwrap_or_default();
-            path.push(".zeta_crypto/session.json");
-            if let Ok(meta) = std::fs::metadata(path) {
-                if let Ok(time) = meta.modified() {
-                    if let Ok(secs) = time.duration_since(std::time::UNIX_EPOCH) {
-                        println!("{}", secs.as_secs());
-                    }
-                }
-            }
-        }
-        Commands::DataFileCount => {
-            let mut dir = dirs::home_dir().unwrap_or_default();
-            dir.push(".zeta_crypto");
-            println!("{}", fs_cmd::file_count(dir));
         }
         Commands::Env => {
             let rustc = Command::new("rustc")
@@ -366,6 +257,229 @@ fn main() -> Result<()> {
             println!("healthcheck");
             println!("cleanup");
             println!("help-all");
+        }
+        Commands::ClearLogs => {
+            use std::io::{self, Write};
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+            if path.exists() {
+                print!("This will clear logs. Type 'yes' to confirm: ");
+                io::stdout().flush().unwrap();
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).unwrap();
+                if input.trim().eq_ignore_ascii_case("yes") {
+                    std::fs::write(&path, "")?;
+                    println!("Logs cleared.");
+                } else {
+                    println!("Aborted.");
+                }
+            } else {
+                println!("No logs found.");
+            }
+        }
+        Commands::LogPath => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+            println!("{}", path.display());
+        }
+        Commands::ConfigPath => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/config.toml");
+            println!("{}", path.display());
+        }
+        Commands::SessionPath => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/session.json");
+            println!("{}", path.display());
+        }
+        Commands::CachePath => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/cache");
+            println!("{}", path.display());
+        }
+        Commands::DataDir => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto");
+            println!("{}", path.display());
+        }
+        Commands::ListFiles => {
+            use std::fs;
+
+            let mut dir = dirs::home_dir().unwrap_or_default();
+            dir.push(".zeta_crypto");
+
+            let entries = match fs::read_dir(&dir) {
+                Ok(e) => e,
+                Err(_) => {
+                    println!("Directory not found");
+                    return Ok(());
+                }
+            };
+
+            let mut files: Vec<String> = entries
+                .flatten()
+                .filter_map(|e| e.file_name().into_string().ok())
+                .collect();
+
+            files.sort();
+
+            for f in files {
+                println!("{}", f);
+            }
+        }
+        Commands::CpuCores => {
+            let cores = num_cpus::get();
+            println!("{}", cores);
+        }
+        Commands::Timestamp => {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            println!("{}", now);
+        }
+        Commands::ConfigExists => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/config.toml");
+            println!("{}", path.exists());
+        }
+        Commands::SessionExists => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/session.json");
+            println!("{}", path.exists());
+        }
+        Commands::LogsExist => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+            println!("{}", path.exists());
+        }
+        Commands::ConfigDir => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto");
+            println!("{}", path.display());
+        }
+        Commands::WalletConnectOpenLog => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+
+            if !path.exists() {
+                println!("Log file not found");
+                return Ok(());
+            }
+
+            let cmd = {
+                #[cfg(target_os = "macos")]
+                {
+                    "open"
+                }
+                #[cfg(target_os = "linux")]
+                {
+                    "xdg-open"
+                }
+                #[cfg(target_os = "windows")]
+                {
+                    "start"
+                }
+            };
+
+            let _ = std::process::Command::new(cmd)
+                .arg(path.to_string_lossy().to_string())
+                .spawn();
+
+            println!("Opening log file...");
+        }
+        Commands::ShowPeer => {
+            let cfg = ZetaConfig::load();
+            match cfg.default_peer {
+                Some(p) => println!("{}", p),
+                None => println!("No default peer set"),
+            }
+        }
+        Commands::WalletConnectPeerHash => match WalletConnectSession::from_file() {
+            Some(s) => {
+                let hash = hex::encode(sha2::Sha256::digest(s.peer().as_bytes()));
+                println!("{}", &hash[0..16]);
+            }
+            None => println!("No saved session"),
+        },
+        Commands::WalletConnectActive => match WalletConnectSession::from_file() {
+            Some(s) => {
+                if s.is_connected() {
+                    println!("true");
+                } else {
+                    println!("false");
+                }
+            }
+            None => println!("false"),
+        },
+        Commands::WalletConnectShortStatus { peer } => {
+            let session = WalletConnectSession::new(&peer);
+            if session.is_connected() {
+                println!("connected");
+            } else {
+                println!("disconnected");
+            }
+        }
+        Commands::WalletConnectPeerLen { peer } => {
+            println!("{}", peer.len());
+        }
+        Commands::LogCount => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/logs.txt");
+            if !path.exists() {
+                println!("0");
+                return Ok(());
+            }
+            let content = std::fs::read_to_string(&path)?;
+            let count = content.lines().count();
+            println!("{}", count);
+        }
+        Commands::WalletConnectPeerUpper { peer } => {
+            println!("{}", peer.to_uppercase());
+        }
+        Commands::SessionSize => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/session.json");
+            if let Ok(meta) = std::fs::metadata(&path) {
+                println!("{}", meta.len());
+            } else {
+                println!("0");
+            }
+        }
+        Commands::Cwd => {
+            if let Ok(path) = std::env::current_dir() {
+                println!("{}", path.display());
+            }
+        }
+        Commands::ConfigSize => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/config.toml");
+            if let Ok(meta) = std::fs::metadata(&path) {
+                println!("{}", meta.len());
+            } else {
+                println!("0");
+            }
+        }
+        Commands::SessionModified => {
+            let mut path = dirs::home_dir().unwrap_or_default();
+            path.push(".zeta_crypto/session.json");
+            if let Ok(meta) = std::fs::metadata(&path) {
+                if let Ok(time) = meta.modified() {
+                    if let Ok(secs) = time.duration_since(std::time::UNIX_EPOCH) {
+                        println!("{}", secs.as_secs());
+                    }
+                }
+            }
+        }
+        Commands::DataFileCount => {
+            let mut dir = dirs::home_dir().unwrap_or_default();
+            dir.push(".zeta_crypto");
+            if let Ok(read) = std::fs::read_dir(&dir) {
+                let count = read.count();
+                println!("{}", count);
+            } else {
+                println!("0");
+            }
         }
     }
 
