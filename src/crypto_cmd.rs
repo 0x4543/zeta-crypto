@@ -1,5 +1,5 @@
-use anyhow::Result;
 use crate::{MnemonicHelper, Signer, Wallet};
+use anyhow::Result;
 
 pub fn handle_gen_mnemonic() -> Result<()> {
     let mn = MnemonicHelper::generate();

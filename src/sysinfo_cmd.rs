@@ -1,8 +1,8 @@
-use anyhow::Result;
-use std::process::Command;
-use std::io::{self, Write};
-use crate::version;
 use crate::cli_utils;
+use crate::version;
+use anyhow::Result;
+use std::io::{self, Write};
+use std::process::Command;
 
 pub fn handle_version() -> Result<()> {
     version::print_version_info();
@@ -34,7 +34,11 @@ pub fn handle_env() -> Result<()> {
 
     println!("Zeta CLI version: {}", env!("CARGO_PKG_VERSION"));
     println!("Rust compiler: {}", rustc.trim());
-    println!("Platform: {} {}", std::env::consts::OS, std::env::consts::ARCH);
+    println!(
+        "Platform: {} {}",
+        std::env::consts::OS,
+        std::env::consts::ARCH
+    );
     Ok(())
 }
 

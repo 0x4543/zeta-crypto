@@ -9,5 +9,9 @@ pub fn print_version_info() {
 
     println!("Zeta Crypto CLI {}", env!("CARGO_PKG_VERSION"));
     println!("Rust compiler: {}", rustc.trim());
-    println!("Platform: {} {}", std::env::consts::OS, std::env::consts::ARCH);
+    println!(
+        "Platform: {} {}",
+        std::env::consts::OS,
+        std::env::consts::ARCH
+    );
 }

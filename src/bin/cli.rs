@@ -2,8 +2,8 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use sha2::Digest;
 use std::process::Command;
-use zeta_crypto::sysinfo_cmd;
 use zeta_crypto::crypto_cmd;
+use zeta_crypto::sysinfo_cmd;
 use zeta_crypto::walletconnect_cmd;
 use zeta_crypto::{WalletConnectSession, ZetaConfig};
 
@@ -222,9 +222,18 @@ fn main() -> Result<()> {
             }
 
             let cmd = {
-                #[cfg(target_os = "macos")] { "open" }
-                #[cfg(target_os = "linux")] { "xdg-open" }
-                #[cfg(target_os = "windows")] { "start" }
+                #[cfg(target_os = "macos")]
+                {
+                    "open"
+                }
+                #[cfg(target_os = "linux")]
+                {
+                    "xdg-open"
+                }
+                #[cfg(target_os = "windows")]
+                {
+                    "start"
+                }
             };
 
             let _ = Command::new(cmd)
@@ -249,13 +258,21 @@ fn main() -> Result<()> {
         },
         Commands::WalletConnectActive => match WalletConnectSession::from_file() {
             Some(s) => {
-                if s.is_connected() { println!("true"); } else { println!("false"); }
+                if s.is_connected() {
+                    println!("true");
+                } else {
+                    println!("false");
+                }
             }
             None => println!("false"),
         },
         Commands::WalletConnectShortStatus { peer } => {
             let session = WalletConnectSession::new(&peer);
-            if session.is_connected() { println!("connected"); } else { println!("disconnected"); }
+            if session.is_connected() {
+                println!("connected");
+            } else {
+                println!("disconnected");
+            }
         }
         Commands::WalletConnectPeerLen { peer } => {
             println!("{}", peer.len());
