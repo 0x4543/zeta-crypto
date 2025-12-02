@@ -2,15 +2,13 @@ pub mod config;
 pub mod key_derivation;
 pub mod mnemonic;
 pub mod signer;
-pub mod version;
 pub mod wallet;
 pub mod walletconnect;
+pub mod version;
 
 pub mod cli_utils;
 
 pub mod crypto_cmd;
-pub mod fs_cmd;
-pub mod fs_manage_cmd;
 pub mod sysinfo_cmd;
 pub mod walletconnect_cmd;
 
