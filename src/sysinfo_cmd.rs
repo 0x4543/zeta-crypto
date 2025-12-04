@@ -1,4 +1,3 @@
-use crate::cli_utils;
 use crate::version;
 use crate::ZetaConfig;
 use anyhow::Result;
@@ -58,9 +57,9 @@ pub fn handle_cleanup() -> Result<()> {
     if input.trim().to_lowercase() == "yes" {
         let _ = std::fs::remove_file(dir.join("logs.txt"));
         let _ = std::fs::remove_file(dir.join("session.json"));
-        cli_utils::success("Cleanup completed.");
+        println!("\x1b[32mCleanup completed.\x1b[0m");
     } else {
-        cli_utils::fail("Aborted.");
+        eprintln!("\x1b[31mAborted.\x1b[0m");
     }
     Ok(())
 }
