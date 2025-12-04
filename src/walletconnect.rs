@@ -1,16 +1,19 @@
 use serde::{Deserialize, Serialize};
-use std::fs;
-use std::io::{Seek, Write};
+use std::fs::{self, OpenOptions};
+use std::io::{self, Write};
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const LOG_MAX_BYTES: u64 = 262_144;
+const APP_DIR: &str = ".zeta_crypto";
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WalletConnectSession {
     peer: String,
     status: String,
     last_updated: u64,
+    #[serde(skip)]
+    _dirty: bool,
 }
 
 impl WalletConnectSession {
@@ -19,6 +22,7 @@ impl WalletConnectSession {
             peer: peer.to_string(),
             status: "disconnected".to_string(),
             last_updated: current_timestamp(),
+            _dirty: false,
         }
     }
 
@@ -26,14 +30,14 @@ impl WalletConnectSession {
         self.status = "connected".to_string();
         self.last_updated = current_timestamp();
         let _ = self.save_to_file();
-        log_event(&format!("connect peer={}", self.peer));
+        let _ = log_event(&format!("connect peer={}", self.peer));
     }
 
     pub fn disconnect(&mut self) {
         self.status = "disconnected".to_string();
         self.last_updated = current_timestamp();
         let _ = self.save_to_file();
-        log_event(&format!("disconnect peer={}", self.peer));
+        let _ = log_event(&format!("disconnect peer={}", self.peer));
     }
 
     pub fn status(&self) -> String {
@@ -45,7 +49,7 @@ impl WalletConnectSession {
     }
 
     pub fn from_file() -> Option<Self> {
-        let path = session_file_path();
+        let path = get_session_path();
         if !path.exists() {
             return None;
         }
@@ -57,11 +61,13 @@ impl WalletConnectSession {
         self.last_updated
     }
 
-    pub fn save_to_file(&self) -> std::io::Result<()> {
-        let mut path = dirs::home_dir().unwrap_or_default();
-        path.push(".zeta_crypto/session.json");
-        let encoded = serde_json::to_string_pretty(self).unwrap();
-        std::fs::write(path, encoded)
+    pub fn save_to_file(&self) -> io::Result<()> {
+        let path = get_session_path();
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let encoded = serde_json::to_string_pretty(self).map_err(io::Error::other)?;
+        fs::write(path, encoded)
     }
 
     pub fn is_connected(&self) -> bool {
@@ -74,43 +80,37 @@ fn current_timestamp() -> u64 {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs()
-}
+    }
 
-fn session_file_path() -> PathBuf {
+fn get_app_dir() -> PathBuf {
     let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-    dir.push(".zeta_crypto");
-    dir.push("session.json");
+    dir.push(APP_DIR);
     dir
 }
 
-fn log_file_path() -> PathBuf {
-    let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-    dir.push(".zeta_crypto");
-    dir.push("logs.txt");
-    dir
+fn get_session_path() -> PathBuf {
+    get_app_dir().join("session.json")
 }
 
-fn log_rotate_if_needed(path: &PathBuf) {
-    if let Ok(meta) = fs::metadata(path) {
+fn get_log_path() -> PathBuf {
+    get_app_dir().join("logs.txt")
+}
+
+fn log_event(line: &str) -> io::Result<()> {
+    let path = get_log_path();
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    if let Ok(meta) = fs::metadata(&path) {
         if meta.len() > LOG_MAX_BYTES {
-            let mut rotated = path.clone();
-            rotated.set_file_name("logs.1.txt");
-            let _ = fs::rename(path, rotated);
-            let _ = fs::File::create(path);
+            let rotated = path.with_extension("1.txt");
+            let _ = fs::rename(&path, rotated);
         }
     }
-}
 
-fn log_event(line: &str) {
-    let path = log_file_path();
-    if let Some(parent) = path.parent() {
-        let _ = fs::create_dir_all(parent);
-    }
-    log_rotate_if_needed(&path);
-    if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(&path) {
-        let ts = current_timestamp();
-        let _ = writeln!(file, "[{}] {}", ts, line);
-        let _ = file.flush();
-        let _ = file.seek(std::io::SeekFrom::End(0));
-    }
+    let mut file = OpenOptions::new().create(true).append(true).open(path)?;
+    let ts = current_timestamp();
+    writeln!(file, "[{}] {}", ts, line)?;
+    Ok(())
 }
