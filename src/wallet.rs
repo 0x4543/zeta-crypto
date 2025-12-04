@@ -13,15 +13,21 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn from_mnemonic(mn: &Mnemonic, passphrase: &str) -> Wallet {
+    pub fn from_phrase(phrase: &str, passphrase: &str) -> Result<Self> {
+        let mn = MnemonicHelper::from_phrase(phrase)?;
+        Self::from_mnemonic(&mn, passphrase)
+    }
+
+    pub fn from_mnemonic(mn: &Mnemonic, passphrase: &str) -> Result<Self> {
         let seed = MnemonicHelper::to_seed(mn, passphrase);
         let salt = b"zeta-crypto-wallet";
         let mut key = [0u8; 32];
         pbkdf2::<Hmac<Sha256>>(&seed, salt, 100_000, &mut key);
 
-        let sk = SigningKey::from_bytes(&key).expect("signing key");
+        let sk = SigningKey::from_bytes(&key)
+            .map_err(|_| anyhow::anyhow!("Failed to derive valid signing key"))?;
         let pk = VerifyingKey::from(&sk);
-        Wallet { sk, pk }
+        Ok(Wallet { sk, pk })
     }
 
     pub fn signing_key(&self) -> &SigningKey {
@@ -32,21 +38,8 @@ impl Wallet {
         let encoded = self.pk.to_encoded_point(false);
         hex::encode(encoded.as_bytes())
     }
-}
 
-pub struct MnemonicWallet;
-
-impl MnemonicWallet {
-    pub fn from_phrase(phrase: &str, passphrase: &str) -> Result<Wallet> {
-        let mn = MnemonicHelper::from_phrase(phrase)?;
-        Ok(Wallet::from_mnemonic(&mn, passphrase))
-    }
-}
-
-pub struct WalletOps;
-
-impl WalletOps {
-    pub fn sign_message(sk: &SigningKey, msg: &[u8]) -> String {
-        Signer::sign(sk, msg)
+    pub fn sign_message(&self, msg: &[u8]) -> String {
+        Signer::sign(&self.sk, msg)
     }
 }
