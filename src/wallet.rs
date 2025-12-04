@@ -1,4 +1,4 @@
-use crate::mnemonic::MnemonicHelper;
+use crate::mnemonic;
 use crate::signer;
 use anyhow::Result;
 use bip39::Mnemonic;
@@ -14,12 +14,12 @@ pub struct Wallet {
 
 impl Wallet {
     pub fn from_phrase(phrase: &str, passphrase: &str) -> Result<Self> {
-        let mn = MnemonicHelper::from_phrase(phrase)?;
+        let mn = mnemonic::from_phrase(phrase)?;
         Self::from_mnemonic(&mn, passphrase)
     }
 
     pub fn from_mnemonic(mn: &Mnemonic, passphrase: &str) -> Result<Self> {
-        let seed = MnemonicHelper::to_seed(mn, passphrase);
+        let seed = mnemonic::to_seed(mn, passphrase);
         let salt = b"zeta-crypto-wallet";
         let mut key = [0u8; 32];
         pbkdf2::<Hmac<Sha256>>(&seed, salt, 100_000, &mut key);
