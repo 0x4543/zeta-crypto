@@ -16,7 +16,6 @@ pub use cli_utils::*;
 
 pub use config::ZetaConfig;
 pub use key_derivation::{derive_key_hkdf, derive_key_pbkdf2};
-pub use mnemonic::MnemonicHelper;
 pub use wallet::Wallet;
 pub use walletconnect::WalletConnectSession;
 
