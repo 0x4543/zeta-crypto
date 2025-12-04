@@ -1,8 +1,8 @@
-use crate::{signer, MnemonicHelper, Wallet};
+use crate::{mnemonic, signer, Wallet};
 use anyhow::Result;
 
 pub fn handle_gen_mnemonic() -> Result<()> {
-    let mn = MnemonicHelper::generate();
+    let mn = mnemonic::generate();
     println!("{}", mn);
     Ok(())
 }
