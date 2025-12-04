@@ -1,4 +1,4 @@
-use crate::{MnemonicHelper, Signer, Wallet};
+use crate::{signer, MnemonicHelper, Wallet};
 use anyhow::Result;
 
 pub fn handle_gen_mnemonic() -> Result<()> {
@@ -25,7 +25,7 @@ pub fn handle_verify(pubhex: &str, msg: &str, sig: &str) -> Result<()> {
     let ep = k256::EncodedPoint::from_bytes(&bytes)
         .map_err(|e| anyhow::anyhow!("Invalid public key bytes: {:?}", e))?;
     let vk = k256::ecdsa::VerifyingKey::from_encoded_point(&ep)?;
-    let ok = Signer::verify(&vk, msg.as_bytes(), sig)?;
+    let ok = signer::verify(&vk, msg.as_bytes(), sig)?;
     println!("{}", ok);
     Ok(())
 }
