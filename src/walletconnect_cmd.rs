@@ -77,8 +77,12 @@ pub fn handle_last_updated(peer: &str) -> Result<()> {
 }
 
 pub fn handle_save(peer: String) {
-    println!("Not implemented.");
-    println!("Requested peer: {}", peer);
+    let mut cfg = ZetaConfig::load();
+    cfg.default_peer = Some(peer.clone());
+    match cfg.save() {
+        Ok(_) => println!("Saved default peer: {}", peer),
+        Err(e) => println!("Failed to save config: {}", e),
+    }
 }
 
 pub fn handle_is_default(peer: &str) {
