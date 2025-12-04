@@ -1,3 +1,4 @@
+use anyhow::Result;
 use hkdf::Hkdf;
 use hmac::Hmac;
 use pbkdf2::pbkdf2;
@@ -9,9 +10,10 @@ pub fn derive_key_pbkdf2(pass: &str, salt: &[u8], iterations: u32, out_len: usiz
     out
 }
 
-pub fn derive_key_hkdf(ikm: &[u8], salt: &[u8], info: &[u8], out_len: usize) -> Vec<u8> {
+pub fn derive_key_hkdf(ikm: &[u8], salt: &[u8], info: &[u8], out_len: usize) -> Result<Vec<u8>> {
     let hk = Hkdf::<Sha512>::new(Some(salt), ikm);
     let mut okm = vec![0u8; out_len];
-    hk.expand(info, &mut okm).expect("hkdf expand");
-    okm
+    hk.expand(info, &mut okm)
+        .map_err(|_| anyhow::anyhow!("HKDF expansion failed: invalid output length"))?;
+    Ok(okm)
 }
