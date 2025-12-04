@@ -1,5 +1,5 @@
 use crate::mnemonic::MnemonicHelper;
-use crate::signer::Signer;
+use crate::signer;
 use anyhow::Result;
 use bip39::Mnemonic;
 use hmac::Hmac;
@@ -40,6 +40,6 @@ impl Wallet {
     }
 
     pub fn sign_message(&self, msg: &[u8]) -> String {
-        Signer::sign(&self.sk, msg)
+        signer::sign(&self.sk, msg)
     }
 }
