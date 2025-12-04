@@ -1,8 +1,8 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct ZetaConfig {
     pub default_peer: Option<String>,
     pub auto_connect: Option<bool>,
@@ -18,6 +18,16 @@ impl ZetaConfig {
             Ok(s) => toml::from_str(&s).unwrap_or_default(),
             Err(_) => ZetaConfig::default(),
         }
+    }
+
+    pub fn save(&self) -> std::io::Result<()> {
+        let path = config_file_path();
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let content = toml::to_string_pretty(self)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        fs::write(path, content)
     }
 }
 
