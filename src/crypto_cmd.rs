@@ -8,17 +8,14 @@ pub fn handle_gen_mnemonic() -> Result<()> {
 }
 
 pub fn handle_derive_wallet(phrase: &str, pass: Option<&str>) -> Result<()> {
-    let mn = MnemonicHelper::from_phrase(phrase)?;
-    let w = Wallet::from_mnemonic(&mn, pass.unwrap_or(""));
+    let w = Wallet::from_phrase(phrase, pass.unwrap_or(""))?;
     println!("{}", w.address_hex());
     Ok(())
 }
 
 pub fn handle_sign(phrase: &str, pass: Option<&str>, msg: &str) -> Result<()> {
-    let mn = MnemonicHelper::from_phrase(phrase)?;
-    let w = Wallet::from_mnemonic(&mn, pass.unwrap_or(""));
-    let sk = w.signing_key();
-    let sig = Signer::sign(sk, msg.as_bytes());
+    let w = Wallet::from_phrase(phrase, pass.unwrap_or(""))?;
+    let sig = w.sign_message(msg.as_bytes());
     println!("{}", sig);
     Ok(())
 }
@@ -34,8 +31,7 @@ pub fn handle_verify(pubhex: &str, msg: &str, sig: &str) -> Result<()> {
 }
 
 pub fn handle_print_address(phrase: &str, pass: Option<&str>) -> Result<()> {
-    let mn = MnemonicHelper::from_phrase(phrase)?;
-    let w = Wallet::from_mnemonic(&mn, pass.unwrap_or(""));
+    let w = Wallet::from_phrase(phrase, pass.unwrap_or(""))?;
     println!("{}", w.address_hex());
     Ok(())
 }
