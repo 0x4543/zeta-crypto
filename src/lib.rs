@@ -2,7 +2,6 @@ pub mod config;
 pub mod key_derivation;
 pub mod mnemonic;
 pub mod signer;
-pub mod version;
 pub mod wallet;
 pub mod walletconnect;
 
