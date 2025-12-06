@@ -9,9 +9,6 @@ pub mod crypto_cmd;
 pub mod sysinfo_cmd;
 pub mod walletconnect_cmd;
 
-#[cfg(test)]
-mod tests;
-
 pub use config::ZetaConfig;
 pub use key_derivation::{derive_key_hkdf, derive_key_pbkdf2};
 pub use wallet::Wallet;
