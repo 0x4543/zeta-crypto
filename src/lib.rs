@@ -13,15 +13,3 @@ pub use config::ZetaConfig;
 pub use key_derivation::{derive_key_hkdf, derive_key_pbkdf2};
 pub use wallet::Wallet;
 pub use walletconnect::WalletConnectSession;
-
-pub fn build_info() -> String {
-    let version = env!("CARGO_PKG_VERSION");
-    let target = format!("{} {}", std::env::consts::OS, std::env::consts::ARCH);
-    format!("zeta-crypto {} | target {}", version, target)
-}
-
-pub fn system_info() -> String {
-    let cpus = num_cpus::get();
-    let pid = std::process::id();
-    format!("cpus {} | pid {}", cpus, pid)
-}
