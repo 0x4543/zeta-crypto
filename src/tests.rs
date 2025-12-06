@@ -1,34 +1,28 @@
 #[cfg(test)]
 mod tests {
-    use crate::{MnemonicHelper, Wallet, Signer};
+    use crate::{mnemonic, signer, Wallet};
+    use k256::ecdsa::VerifyingKey;
 
     #[test]
-    fn test_wallet_address_length() {
-        let mn = MnemonicHelper::generate();
-        let wallet = Wallet::from_mnemonic(&mn, "");
+    fn test_wallet_pubkey_length() {
+        let mn = mnemonic::generate();
+        let wallet = Wallet::from_mnemonic(&mn, "").expect("failed to create wallet");
         let address = wallet.address_hex();
-        assert_eq!(address.len(), 40); // 20 bytes hex
+        assert_eq!(address.len(), 130);
     }
 
     #[test]
     fn test_sign_verify() {
-        let mn = MnemonicHelper::generate();
-        let wallet = Wallet::from_mnemonic(&mn, "");
-        let sk = wallet.signing_key();
-        let vk = wallet.verifying_key();
+        let mn = mnemonic::generate();
+        let wallet = Wallet::from_mnemonic(&mn, "").expect("failed to create wallet");
         let msg = b"test message";
 
-        let sig = Signer::sign(&sk, msg);
-        let verified = Signer::verify(&vk, msg, &sig).unwrap();
-        assert!(verified);
-    }
+        let sig = wallet.sign_message(msg);
 
-    #[test]
-    fn test_generate_random_hex() {
-        let hex1 = Wallet::generate_random_hex();
-        let hex2 = Wallet::generate_random_hex();
-        assert_eq!(hex1.len(), 64);
-        assert_eq!(hex2.len(), 64);
-        assert_ne!(hex1, hex2); // should generate different values
+        let sk = wallet.signing_key();
+        let vk = VerifyingKey::from(sk);
+
+        let verified = signer::verify(&vk, msg, &sig).expect("verification failed");
+        assert!(verified);
     }
 }
