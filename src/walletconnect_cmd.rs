@@ -1,14 +1,20 @@
 use crate::{WalletConnectSession, ZetaConfig};
 use anyhow::Result;
+use clap::ValueEnum;
 use sha2::Digest;
 use std::process::Command;
 
-pub fn handle_action(peer: String, action: String) -> Result<()> {
+#[derive(ValueEnum, Clone, Debug)]
+pub enum WcAction {
+    Connect,
+    Disconnect,
+}
+
+pub fn handle_action(peer: String, action: WcAction) -> Result<()> {
     let mut session = WalletConnectSession::new(&peer);
-    match action.as_str() {
-        "connect" => session.connect(),
-        "disconnect" => session.disconnect(),
-        _ => println!("Unknown action: {}", action),
+    match action {
+        WcAction::Connect => session.connect(),
+        WcAction::Disconnect => session.disconnect(),
     }
     println!("{}", session.status());
     Ok(())
@@ -43,18 +49,14 @@ pub fn handle_restore() -> Result<()> {
     Ok(())
 }
 
-pub fn handle_default(action: &str) {
+pub fn handle_default(action: WcAction) {
     let cfg = ZetaConfig::load();
     match cfg.default_peer {
         Some(peer) => {
             let mut session = WalletConnectSession::new(&peer);
             match action {
-                "connect" => session.connect(),
-                "disconnect" => session.disconnect(),
-                _ => {
-                    println!("Unknown action");
-                    return;
-                }
+                WcAction::Connect => session.connect(),
+                WcAction::Disconnect => session.disconnect(),
             }
             println!("{}", session.status());
         }
