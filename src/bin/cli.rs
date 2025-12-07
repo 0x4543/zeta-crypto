@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use zeta_crypto::crypto_cmd;
 use zeta_crypto::sysinfo_cmd;
-use zeta_crypto::walletconnect_cmd;
+use zeta_crypto::walletconnect_cmd::{self, WcAction};
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -33,7 +33,7 @@ enum Commands {
     },
     WalletConnect {
         peer: String,
-        action: String,
+        action: WcAction,
     },
     WalletConnectStatus {
         peer: String,
@@ -43,7 +43,7 @@ enum Commands {
     },
     WalletConnectRestore,
     WalletConnectDefault {
-        action: String,
+        action: WcAction,
     },
     WalletConnectLast,
     WalletConnectLastUpdated {
@@ -130,7 +130,7 @@ fn main() -> Result<()> {
             walletconnect_cmd::handle_restore()?;
         }
         Commands::WalletConnectDefault { action } => {
-            walletconnect_cmd::handle_default(&action);
+            walletconnect_cmd::handle_default(action);
         }
         Commands::WalletConnectLast => {
             walletconnect_cmd::handle_last()?;
