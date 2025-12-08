@@ -1,5 +1,4 @@
 use crate::storage;
-use crate::version;
 use crate::ZetaConfig;
 use anyhow::Result;
 use std::io::{self, Write};
