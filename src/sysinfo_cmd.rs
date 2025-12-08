@@ -1,3 +1,5 @@
+use crate::storage;
+use crate::version;
 use crate::ZetaConfig;
 use anyhow::Result;
 use std::io::{self, Write};
@@ -21,41 +23,23 @@ pub fn handle_version() -> Result<()> {
 }
 
 pub fn handle_health_check() -> Result<()> {
-    use std::path::PathBuf;
-    let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-    dir.push(".zeta_crypto");
-
-    let cfg = dir.join("config.toml");
-    let session = dir.join("session.json");
-    let log = dir.join("logs.txt");
+    let cfg = storage::get_config_path();
+    let session = storage::get_session_path();
+    let log = storage::get_log_path();
 
     println!("Health Check:");
     println!("config.toml: {}", cfg.exists());
     println!("session.json: {}", session.exists());
-    println!("logs.txt: {}", log.exists());
+    println!("logs.txt:    {}", log.exists());
     Ok(())
 }
 
 pub fn handle_env() -> Result<()> {
-    let rustc = Command::new("rustc")
-        .arg("--version")
-        .output()
-        .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
-        .unwrap_or_else(|_| "unknown".into());
-
-    println!("Zeta CLI version: {}", env!("CARGO_PKG_VERSION"));
-    println!("Rust compiler: {}", rustc.trim());
-    println!(
-        "Platform: {} {}",
-        std::env::consts::OS,
-        std::env::consts::ARCH
-    );
-    Ok(())
+    handle_version()
 }
 
 pub fn handle_cleanup() -> Result<()> {
-    let mut dir = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-    dir.push(".zeta_crypto");
+    let dir = storage::get_app_dir();
 
     println!(
         "This will remove all logs and saved sessions from {}",
@@ -66,8 +50,8 @@ pub fn handle_cleanup() -> Result<()> {
     let mut input = String::new();
     io::stdin().read_line(&mut input).unwrap();
     if input.trim().to_lowercase() == "yes" {
-        let _ = std::fs::remove_file(dir.join("logs.txt"));
-        let _ = std::fs::remove_file(dir.join("session.json"));
+        let _ = std::fs::remove_file(storage::get_log_path());
+        let _ = std::fs::remove_file(storage::get_session_path());
         println!("\x1b[32mCleanup completed.\x1b[0m");
     } else {
         eprintln!("\x1b[31mAborted.\x1b[0m");
@@ -76,8 +60,7 @@ pub fn handle_cleanup() -> Result<()> {
 }
 
 pub fn handle_clear_logs() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/logs.txt");
+    let path = storage::get_log_path();
 
     if path.exists() {
         print!("This will clear logs. Type 'yes' to confirm: ");
@@ -100,15 +83,12 @@ pub fn handle_clear_logs() -> Result<()> {
 }
 
 pub fn handle_log_path() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/logs.txt");
-    println!("{}", path.display());
+    println!("{}", storage::get_log_path().display());
     Ok(())
 }
 
 pub fn handle_log_size() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/logs.txt");
+    let path = storage::get_log_path();
     if path.exists() {
         let metadata = std::fs::metadata(&path)?;
         let size = metadata.len();
@@ -124,8 +104,7 @@ pub fn handle_log_size() -> Result<()> {
 }
 
 pub fn handle_log_count() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/logs.txt");
+    let path = storage::get_log_path();
     if !path.exists() {
         println!("0");
         return Ok(());
@@ -137,38 +116,28 @@ pub fn handle_log_count() -> Result<()> {
 }
 
 pub fn handle_config_path() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/config.toml");
-    println!("{}", path.display());
+    println!("{}", storage::get_config_path().display());
     Ok(())
 }
 
 pub fn handle_session_path() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/session.json");
-    println!("{}", path.display());
+    println!("{}", storage::get_session_path().display());
     Ok(())
 }
 
 pub fn handle_cache_path() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/cache");
-    println!("{}", path.display());
+    println!("{}", storage::get_cache_dir().display());
     Ok(())
 }
 
 pub fn handle_data_dir() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto");
-    println!("{}", path.display());
+    println!("{}", storage::get_app_dir().display());
     Ok(())
 }
 
 pub fn handle_list_files() -> Result<()> {
     use std::fs;
-
-    let mut dir = dirs::home_dir().unwrap_or_default();
-    dir.push(".zeta_crypto");
+    let dir = storage::get_app_dir();
 
     let entries = match fs::read_dir(&dir) {
         Ok(e) => e,
@@ -207,30 +176,22 @@ pub fn handle_timestamp() -> Result<()> {
 }
 
 pub fn handle_config_exists() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/config.toml");
-    println!("{}", path.exists());
+    println!("{}", storage::get_config_path().exists());
     Ok(())
 }
 
 pub fn handle_session_exists() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/session.json");
-    println!("{}", path.exists());
+    println!("{}", storage::get_session_path().exists());
     Ok(())
 }
 
 pub fn handle_logs_exist() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/logs.txt");
-    println!("{}", path.exists());
+    println!("{}", storage::get_log_path().exists());
     Ok(())
 }
 
 pub fn handle_config_dir() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto");
-    println!("{}", path.display());
+    println!("{}", storage::get_app_dir().display());
     Ok(())
 }
 
@@ -242,8 +203,7 @@ pub fn handle_cwd() -> Result<()> {
 }
 
 pub fn handle_session_size() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/session.json");
+    let path = storage::get_session_path();
     if let Ok(meta) = std::fs::metadata(&path) {
         println!("{}", meta.len());
     } else {
@@ -253,8 +213,7 @@ pub fn handle_session_size() -> Result<()> {
 }
 
 pub fn handle_config_size() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/config.toml");
+    let path = storage::get_config_path();
     if let Ok(meta) = std::fs::metadata(&path) {
         println!("{}", meta.len());
     } else {
@@ -264,8 +223,7 @@ pub fn handle_config_size() -> Result<()> {
 }
 
 pub fn handle_session_modified() -> Result<()> {
-    let mut path = dirs::home_dir().unwrap_or_default();
-    path.push(".zeta_crypto/session.json");
+    let path = storage::get_session_path();
     if let Ok(meta) = std::fs::metadata(&path) {
         if let Ok(time) = meta.modified() {
             if let Ok(secs) = time.duration_since(std::time::UNIX_EPOCH) {
@@ -277,8 +235,7 @@ pub fn handle_session_modified() -> Result<()> {
 }
 
 pub fn handle_data_file_count() -> Result<()> {
-    let mut dir = dirs::home_dir().unwrap_or_default();
-    dir.push(".zeta_crypto");
+    let dir = storage::get_app_dir();
     if let Ok(read) = std::fs::read_dir(&dir) {
         println!("{}", read.count());
     } else {
