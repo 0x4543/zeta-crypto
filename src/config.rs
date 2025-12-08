@@ -1,6 +1,6 @@
+use crate::storage;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct ZetaConfig {
@@ -10,7 +10,7 @@ pub struct ZetaConfig {
 
 impl ZetaConfig {
     pub fn load() -> Self {
-        let path = config_file_path();
+        let path = storage::get_config_path();
         if !path.exists() {
             return ZetaConfig::default();
         }
@@ -21,18 +21,9 @@ impl ZetaConfig {
     }
 
     pub fn save(&self) -> std::io::Result<()> {
-        let path = config_file_path();
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)?;
-        }
+        storage::ensure_app_dir()?;
+        let path = storage::get_config_path();
         let content = toml::to_string_pretty(self).map_err(std::io::Error::other)?;
         fs::write(path, content)
     }
-}
-
-pub fn config_file_path() -> PathBuf {
-    let mut dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-    dir.push(".zeta_crypto");
-    dir.push("config.toml");
-    dir
 }
