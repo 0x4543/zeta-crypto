@@ -65,33 +65,33 @@ impl BaseClient {
     pub async fn resolve_name(&self, name: &str) -> Result<String> {
         let node = namehash(name);
         let resolver_addr = Address::from_str(BASENAMES_RESOLVER)?;
-        
+
         let resolver = L2Resolver::new(resolver_addr, &self.provider);
-        
+
         let address = resolver.addr(node).call().await?._0;
-        
+
         if address == Address::ZERO {
             return Err(anyhow!("Name not found or has no address record"));
         }
-        
+
         Ok(address.to_string())
     }
 }
 
 fn namehash(name: &str) -> FixedBytes<32> {
-    let mut node = [0u8; 32];
-    
+    let mut node = FixedBytes::<32>::ZERO;
+
     if name.is_empty() {
-        return FixedBytes::from(node);
+        return node;
     }
 
     for label in name.split('.').rev() {
         let label_hash = keccak256(label.as_bytes());
         let mut combined = Vec::new();
-        combined.extend_from_slice(&node);
-        combined.extend_from_slice(&label_hash);
-        node = *keccak256(&combined);
+        combined.extend_from_slice(node.as_slice());
+        combined.extend_from_slice(label_hash.as_slice());
+        node = keccak256(&combined);
     }
 
-    FixedBytes::from(node)
+    node
 }
