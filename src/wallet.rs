@@ -24,7 +24,7 @@ impl Wallet {
         let mut key = [0u8; 32];
         pbkdf2::<Hmac<Sha256>>(&seed, salt, 100_000, &mut key);
 
-        let sk = SigningKey::from_bytes(&key)
+        let sk = SigningKey::from_slice(&key)
             .map_err(|_| anyhow::anyhow!("Failed to derive valid signing key"))?;
         let pk = VerifyingKey::from(&sk);
         Ok(Wallet { sk, pk })
