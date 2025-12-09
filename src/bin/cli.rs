@@ -107,7 +107,19 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum BaseCommands {
-    Balance { address: String },
+    Balance {
+        address: String,
+    },
+    Send {
+        #[arg(long)]
+        phrase: String,
+        #[arg(long)]
+        pass: Option<String>,
+        #[arg(long)]
+        to: String,
+        #[arg(long)]
+        amount: String,
+    },
 }
 
 #[tokio::main]
@@ -118,6 +130,15 @@ async fn main() -> Result<()> {
         Commands::Base { cmd } => match cmd {
             BaseCommands::Balance { address } => {
                 base_cmd::handle_balance(BASE_RPC_URL, &address).await?;
+            }
+            BaseCommands::Send {
+                phrase,
+                pass,
+                to,
+                amount,
+            } => {
+                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount)
+                    .await?;
             }
         },
         Commands::GenMnemonic => {
