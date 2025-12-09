@@ -42,4 +42,8 @@ impl Wallet {
     pub fn sign_message(&self, msg: &[u8]) -> String {
         signer::sign(&self.sk, msg)
     }
+
+    pub fn get_private_key_bytes(&self) -> Vec<u8> {
+        self.sk.to_bytes().to_vec()
+    }
 }
