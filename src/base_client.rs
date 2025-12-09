@@ -9,17 +9,12 @@ use reqwest::Client;
 use std::str::FromStr;
 use url::Url;
 
-const ENS_REGISTRY_ADDR: &str = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
+const BASENAMES_RESOLVER: &str = "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD";
 
 sol! {
     #[sol(rpc)]
     interface L2Resolver {
         function addr(bytes32 node) external view returns (address);
-    }
-
-    #[sol(rpc)]
-    interface ENSRegistry {
-        function resolver(bytes32 node) external view returns (address);
     }
 }
 
@@ -68,29 +63,28 @@ impl BaseClient {
     }
 
     pub async fn resolve_name(&self, name: &str) -> Result<String> {
-        let node = namehash(name);
-        let registry_addr = Address::from_str(ENS_REGISTRY_ADDR)?;
-        let registry = ENSRegistry::new(registry_addr, &self.provider);
+        let normalized_name = if name.ends_with(".base") {
+            format!("{}.eth", name)
+        } else {
+            name.to_string()
+        };
 
-        let resolver_addr = registry.resolver(node).call().await?._0;
-
-        if resolver_addr == Address::ZERO {
-            return Err(anyhow!("Name is not registered (no resolver set)"));
-        }
+        let node = namehash(&normalized_name);
+        let resolver_addr = Address::from_str(BASENAMES_RESOLVER)?;
 
         let resolver = L2Resolver::new(resolver_addr, &self.provider);
-        
+
         match resolver.addr(node).call().await {
             Ok(result) => {
                 let address = result._0;
                 if address == Address::ZERO {
-                    Err(anyhow!("Name registered but has no address record"))
+                    Err(anyhow!("Name not found (address is zero)"))
                 } else {
                     Ok(address.to_string())
                 }
             },
             Err(_) => {
-                Err(anyhow!("Standard resolution failed. This name might use Wildcard/CCIP-Read which is not yet supported."))
+                Err(anyhow!("Resolution failed. The name might not be registered or Resolver is unavailable."))
             }
         }
     }
