@@ -1,8 +1,8 @@
+use alloy::network::EthereumWallet;
 use alloy::primitives::{keccak256, Address, FixedBytes, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::sol;
-use alloy::network::EthereumWallet;
 use alloy::transports::http::Http;
 use anyhow::{anyhow, Result};
 use reqwest::Client;
@@ -82,10 +82,10 @@ impl BaseClient {
                 } else {
                     Ok(address.to_string())
                 }
-            },
-            Err(_) => {
-                Err(anyhow!("Resolution failed. The name might not be registered or Resolver is unavailable."))
             }
+            Err(_) => Err(anyhow!(
+                "Resolution failed. The name might not be registered or Resolver is unavailable."
+            )),
         }
     }
 }
