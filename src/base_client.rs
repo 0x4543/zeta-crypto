@@ -72,22 +72,27 @@ impl BaseClient {
         let registry_addr = Address::from_str(ENS_REGISTRY_ADDR)?;
         let registry = ENSRegistry::new(registry_addr, &self.provider);
 
-        // Step 1: Ask Registry for the Resolver address
         let resolver_addr = registry.resolver(node).call().await?._0;
 
         if resolver_addr == Address::ZERO {
             return Err(anyhow!("Name is not registered (no resolver set)"));
         }
 
-        // Step 2: Ask Resolver for the Address
         let resolver = L2Resolver::new(resolver_addr, &self.provider);
-        let address = resolver.addr(node).call().await?._0;
-
-        if address == Address::ZERO {
-            return Err(anyhow!("Name registered but has no address record"));
+        
+        match resolver.addr(node).call().await {
+            Ok(result) => {
+                let address = result._0;
+                if address == Address::ZERO {
+                    Err(anyhow!("Name registered but has no address record"))
+                } else {
+                    Ok(address.to_string())
+                }
+            },
+            Err(_) => {
+                Err(anyhow!("Standard resolution failed. This name might use Wildcard/CCIP-Read which is not yet supported."))
+            }
         }
-
-        Ok(address.to_string())
     }
 }
 
