@@ -18,15 +18,23 @@ pub async fn handle_send(
     to: &str,
     amount_eth: &str,
 ) -> Result<()> {
+    let client = BaseClient::new(rpc_url)?;
+
+    let destination = if to.contains('.') {
+        println!("Resolving destination: {}", to);
+        client.resolve_name(to).await?
+    } else {
+        to.to_string()
+    };
+
     let wallet = Wallet::from_phrase(phrase, pass.unwrap_or(""))?;
     let pk = wallet.get_private_key_bytes();
 
     let amount_wei = parse_units(amount_eth, "ether")?.into();
 
-    let client = BaseClient::new(rpc_url)?;
-    println!("Sending {} ETH to {}...", amount_eth, to);
+    println!("Sending {} ETH to {}...", amount_eth, destination);
 
-    let tx_hash = client.send_eth(&pk, to, amount_wei).await?;
+    let tx_hash = client.send_eth(&pk, &destination, amount_wei).await?;
     println!("Transaction sent! Hash: {}", tx_hash);
 
     Ok(())
