@@ -1,4 +1,4 @@
-use alloy::primitives::Address;
+use alloy::primitives::{Address, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::transports::http::Http;
 use anyhow::Result;
@@ -17,9 +17,9 @@ impl BaseClient {
         Ok(Self { provider })
     }
 
-    pub async fn get_balance(&self, address: &str) -> Result<String> {
+    pub async fn get_balance(&self, address: &str) -> Result<U256> {
         let addr = Address::from_str(address)?;
         let balance = self.provider.get_balance(addr).await?;
-        Ok(balance.to_string())
+        Ok(balance)
     }
 }
