@@ -98,7 +98,8 @@ enum Commands {
     DataFileCount,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.cmd {
