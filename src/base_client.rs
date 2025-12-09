@@ -9,12 +9,17 @@ use reqwest::Client;
 use std::str::FromStr;
 use url::Url;
 
-const BASENAMES_RESOLVER: &str = "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD";
+const ENS_REGISTRY_ADDR: &str = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
 
 sol! {
     #[sol(rpc)]
     interface L2Resolver {
         function addr(bytes32 node) external view returns (address);
+    }
+
+    #[sol(rpc)]
+    interface ENSRegistry {
+        function resolver(bytes32 node) external view returns (address);
     }
 }
 
@@ -64,14 +69,22 @@ impl BaseClient {
 
     pub async fn resolve_name(&self, name: &str) -> Result<String> {
         let node = namehash(name);
-        let resolver_addr = Address::from_str(BASENAMES_RESOLVER)?;
+        let registry_addr = Address::from_str(ENS_REGISTRY_ADDR)?;
+        let registry = ENSRegistry::new(registry_addr, &self.provider);
 
+        // Step 1: Ask Registry for the Resolver address
+        let resolver_addr = registry.resolver(node).call().await?._0;
+
+        if resolver_addr == Address::ZERO {
+            return Err(anyhow!("Name is not registered (no resolver set)"));
+        }
+
+        // Step 2: Ask Resolver for the Address
         let resolver = L2Resolver::new(resolver_addr, &self.provider);
-
         let address = resolver.addr(node).call().await?._0;
 
         if address == Address::ZERO {
-            return Err(anyhow!("Name not found or has no address record"));
+            return Err(anyhow!("Name registered but has no address record"));
         }
 
         Ok(address.to_string())
