@@ -1,8 +1,11 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use zeta_crypto::base_cmd;
 use zeta_crypto::crypto_cmd;
 use zeta_crypto::sysinfo_cmd;
 use zeta_crypto::walletconnect_cmd::{self, WcAction};
+
+const BASE_RPC_URL: &str = "https://mainnet.base.org";
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -13,6 +16,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    Base {
+        #[command(subcommand)]
+        cmd: BaseCommands,
+    },
     VersionInfo,
     GenMnemonic,
     HealthCheck,
@@ -98,11 +105,21 @@ enum Commands {
     DataFileCount,
 }
 
+#[derive(Subcommand)]
+enum BaseCommands {
+    Balance { address: String },
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.cmd {
+        Commands::Base { cmd } => match cmd {
+            BaseCommands::Balance { address } => {
+                base_cmd::handle_balance(BASE_RPC_URL, &address).await?;
+            }
+        },
         Commands::GenMnemonic => {
             crypto_cmd::handle_gen_mnemonic()?;
         }
