@@ -1,12 +1,22 @@
-use alloy::network::EthereumWallet;
-use alloy::primitives::{Address, U256};
+use alloy::primitives::{keccak256, Address, FixedBytes, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::signers::local::PrivateKeySigner;
+use alloy::sol;
+use alloy::network::EthereumWallet;
 use alloy::transports::http::Http;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use reqwest::Client;
 use std::str::FromStr;
 use url::Url;
+
+const BASENAMES_RESOLVER: &str = "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD";
+
+sol! {
+    #[sol(rpc)]
+    interface L2Resolver {
+        function addr(bytes32 node) external view returns (address);
+    }
+}
 
 pub struct BaseClient {
     rpc_url: Url,
@@ -51,4 +61,37 @@ impl BaseClient {
 
         Ok(tx_hash.to_string())
     }
+
+    pub async fn resolve_name(&self, name: &str) -> Result<String> {
+        let node = namehash(name);
+        let resolver_addr = Address::from_str(BASENAMES_RESOLVER)?;
+        
+        let resolver = L2Resolver::new(resolver_addr, &self.provider);
+        
+        let address = resolver.addr(node).call().await?._0;
+        
+        if address == Address::ZERO {
+            return Err(anyhow!("Name not found or has no address record"));
+        }
+        
+        Ok(address.to_string())
+    }
+}
+
+fn namehash(name: &str) -> FixedBytes<32> {
+    let mut node = [0u8; 32];
+    
+    if name.is_empty() {
+        return FixedBytes::from(node);
+    }
+
+    for label in name.split('.').rev() {
+        let label_hash = keccak256(label.as_bytes());
+        let mut combined = Vec::new();
+        combined.extend_from_slice(&node);
+        combined.extend_from_slice(&label_hash);
+        node = *keccak256(&combined);
+    }
+
+    FixedBytes::from(node)
 }
