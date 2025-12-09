@@ -6,7 +6,7 @@ use sha2::{Sha256, Sha512};
 
 pub fn derive_key_pbkdf2(pass: &str, salt: &[u8], iterations: u32, out_len: usize) -> Vec<u8> {
     let mut out = vec![0u8; out_len];
-    pbkdf2::<Hmac<Sha256>>(pass.as_bytes(), salt, iterations, &mut out);
+    pbkdf2::<Hmac<Sha256>>(pass.as_bytes(), salt, iterations, &mut out).expect("pbkdf2");
     out
 }
 

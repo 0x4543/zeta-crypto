@@ -22,7 +22,7 @@ impl Wallet {
         let seed = mnemonic::to_seed(mn, passphrase);
         let salt = b"zeta-crypto-wallet";
         let mut key = [0u8; 32];
-        pbkdf2::<Hmac<Sha256>>(&seed, salt, 100_000, &mut key);
+        pbkdf2::<Hmac<Sha256>>(&seed, salt, 100_000, &mut key).expect("pbkdf2");
 
         let sk = SigningKey::from_slice(&key)
             .map_err(|_| anyhow::anyhow!("Failed to derive valid signing key"))?;
