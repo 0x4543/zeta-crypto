@@ -2,231 +2,160 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Language: Rust](https://img.shields.io/badge/language-Rust-orange)
-![Status: Experimental](https://img.shields.io/badge/status-experimental-blueviolet)
-![CLI](https://img.shields.io/badge/type-CLI-blue)
+![Network: Base](https://img.shields.io/badge/network-Base_Mainnet-blue)
+![Status: Active](https://img.shields.io/badge/status-active-green)
 
-`zeta-crypto` is a lightweight Rust-based command-line tool for experimenting with wallet functionality, mnemonic generation, signing, and WalletConnect sessions.
+`zeta-crypto` is a powerful Rust-based command-line tool designed for the **Base Network** ecosystem. It features a fully functional CLI wallet, **Basenames** resolution support, cryptographic primitives, and WalletConnect session management.
+
+Built with **Alloy**, **Tokio**, and **Rust** for maximum performance and type safety.
 
 ---
 
-### Commands Overview
+## 🔵 Base Network Features
+
+Interact directly with the Base Mainnet.
+
+### Check Balance
+Query the native ETH balance of any address or Basename.
+
+```bash
+# Using a hex address
+zeta-cli base balance 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+
+# Using a Basename (auto-resolves)
+zeta-cli base balance jesse.base
+```
+
+**Output:**
+```
+Balance: 0.0842 ETH
+```
+
+### Resolve Basenames
+Resolve `.base` (and `.eth`) names to their underlying addresses using the official L2 Resolver.
+
+```bash
+zeta-cli base resolve den.base
+```
+
+**Output:**
+```
+Resolving den.base...
+den.base -> 0x2211d1D0020DAEA8039E46Cf1367962070d77DA9
+```
+
+### Send ETH
+Send Ether transactions. Supports both raw addresses and Basenames as destinations.
+
+```bash
+zeta-cli base send \
+  --phrase "seed phrase here..." \
+  --to jesse.base \
+  --amount 0.001
+```
+
+**Features:**
+* **Auto-Resolution:** Automatically detects if `--to` is a Basename and resolves it before sending.
+* **Safety:** Derives private key locally from mnemonic; keys are never stored in plaintext.
+
+**Output:**
+```
+Resolving destination: jesse.base
+Sending 0.001 ETH to 0x2211...
+Transaction sent! Hash: 0xab12...
+```
+
+---
+
+## 🔐 Crypto Primitives
 
 #### Generate Mnemonic
 ```bash
 zeta-cli gen-mnemonic
 ```
-Generates a new BIP39 mnemonic phrase.
+Generates a new secure BIP39 mnemonic phrase.
 
-#### Derive Wallet
+#### Derive Wallet Address
 ```bash
-zeta-cli derive-wallet --phrase "<mnemonic>" --pass "<optional password>"
+zeta-cli derive-wallet --phrase "<mnemonic>" --pass "<optional_password>"
 ```
-Derives a wallet address from a mnemonic phrase.
+Derives the Ethereum/Base address (0x...) from the mnemonic.
 
 #### Sign Message
 ```bash
-zeta-cli sign --phrase "<mnemonic>" --msg "hello world"
+zeta-cli sign --phrase "<mnemonic>" --msg "hello base"
 ```
-Signs a message using the wallet’s private key.
+Signs a message using the derived private key (ECDSA).
 
 #### Verify Signature
 ```bash
-zeta-cli verify --pubhex <public_key_hex> --msg "hello world" --sig <signature>
+zeta-cli verify --pubhex <public_key_hex> --msg "hello base" --sig <signature_hex>
 ```
-Verifies a previously signed message.
-
-#### WalletConnect
-```bash
-zeta-cli walletconnect --peer <peer_url> --action connect
-```
-Establish or disconnect a WalletConnect session with a peer.
+Verifies a cryptographic signature.
 
 ---
 
-### Utility Commands
+## 🔗 WalletConnect Tools
 
-These commands provide quick access to key Zeta Crypto file locations.
+Manage WalletConnect sessions for testing and development.
 
-#### Log Path
+#### Connect / Disconnect
 ```bash
-zeta-cli log-path
-```
-Displays the full path to the log file: `~/.zeta_crypto/logs.txt`.
+# Connect to a peer
+zeta-cli walletconnect <PEER_URI> connect
 
-#### Config Path
+# Disconnect
+zeta-cli walletconnect <PEER_URI> disconnect
+```
+
+#### Session Management
 ```bash
-zeta-cli config-path
-```
-Displays the path to the configuration file: `~/.zeta_crypto/config.toml`.
+# Save a default peer for future use
+zeta-cli walletconnect-save --peer "wc:..."
 
-#### Session Path
-```bash
-zeta-cli session-path
-```
-Displays the path to the session file: `~/.zeta_crypto/session.json`.
+# Check status of specific peer
+zeta-cli walletconnect-status --peer "wc:..."
 
----
-
-### WalletConnect Status
-
-Check if a WalletConnect peer is active and reachable.
-
-```bash
-zeta-cli walletconnect-status --peer "wc:example@2?relay-protocol=irn&symKey=..."
-```
-
-**Output:**
-```
-✅ WalletConnect peer is active and reachable
-```
-or
-```
-⚠️ Unable to reach peer or session inactive
-```
-
----
-
-### WalletConnect Info
-
-Display detailed information about a WalletConnect peer, including its status and last update timestamp.
-
-```bash
-zeta-cli walletconnect-info --peer "wc:example@2?relay-protocol=irn&symKey=..."
-```
-
-**Output:**
-```
-Peer: wc:example@2?relay-protocol=irn&symKey=...
-Status: connected (updated at 1730573102)
-```
-
-This command helps monitor the current state of a WalletConnect session and can be used together with `walletconnect-status` to perform basic connection health checks.
-
----
-
-### WalletConnect Restore
-
-You can restore the last saved WalletConnect session from local storage.
-
-```bash
+# View restored session info
 zeta-cli walletconnect-restore
 ```
 
-**Example output:**
-```
-Restored session:
-Peer: wc:example@2?relay-protocol=irn&symKey=...
-Status: connected (updated at 1730580445)
-```
-
-If no saved session is found, the CLI will display:
-```
-No saved WalletConnect session found
-```
-
 ---
 
-### WalletConnect Default & Config
+## 🛠 System & Config
 
-You can define a default peer and optional auto-connect setting in `~/.zeta_crypto/config.toml`.
-
-**Example:**
-```toml
-default_peer = "wc:example@2?relay-protocol=irn&symKey=..."
-auto_connect = true
-```
-
-Use this configuration to simplify WalletConnect usage:
-
-```bash
-# Use the default peer from config to connect or disconnect
-zeta-cli walletconnect-default connect
-zeta-cli walletconnect-default disconnect
-
-# Display current configuration
-zeta-cli config-show
-```
-
-**Example output:**
-```
-ZetaConfig { default_peer: Some("wc:example@2?relay-protocol=irn&symKey=..."), auto_connect: Some(true) }
-```
-
----
-
-### Key Derivation (PBKDF2 / HKDF)
-
-You can derive a secure key from a passphrase using PBKDF2 and HKDF functions implemented in the project.
-
-```bash
-zeta-cli derive-key --pass "mysecretpassword"
-```
-
-This will generate a deterministic key derived from the given passphrase. The derivation process uses PBKDF2 with HMAC-SHA256 and HKDF for additional entropy expansion.
-
-**Example output:**
-```
-Derived key (hex): 4f3a12c6b7a9c1e3f6d8...
-```
-
-This can be useful for generating session secrets, encryption keys, or other secure materials in crypto-related workflows.
-
----
-
-### Version & Environment Info
-
-Show CLI version (from Cargo), Rust compiler version, and platform.
-
-```bash
-zeta-cli version-info
-```
-
-**Example output:**
-```
-Zeta Crypto CLI 0.1.0
-Rust compiler: rustc 1.82.0 (000000 2024-10-10)
-Platform: macos aarch64
-```
-
----
-
-### Health Check
-
-Verify presence of local state files.
-
+#### Health Check
+Verify the integrity of local configuration and log files.
 ```bash
 zeta-cli healthcheck
 ```
 
-**Checks:**
-- Config exists: `~/.zeta_crypto/config.toml`
-- Session file exists: `~/.zeta_crypto/session.json`
-- Log file exists: `~/.zeta_crypto/logs.txt`
+#### Configuration
+View current configuration (including default peer).
+```bash
+zeta-cli config-show
+```
+*Config location:* `~/.zeta_crypto/config.toml`
+
+#### Logs
+View logs, paths, or clear history.
+```bash
+zeta-cli log-path      # Show log path
+zeta-cli log-size      # Check log size
+zeta-cli clear-logs    # Clear log history
+zeta-cli cleanup       # Remove all local data (logs/sessions)
+```
 
 ---
 
-### Cleanup
+### Installation & Build
 
-Remove local logs and saved sessions (asks for confirmation).
+Ensure you have Rust installed, then build in release mode for optimal performance:
 
 ```bash
-zeta-cli cleanup
+cargo build --release
+./target/release/zeta-cli version-info
 ```
-
-**Prompt:**
-```
-This will remove all logs and saved sessions from ~/.zeta_crypto
-Type 'yes' to confirm:
-```
-
----
-
-### Logging
-
-WalletConnect connect/disconnect events are logged to `~/.zeta_crypto/logs.txt` with automatic rotation (~256 KB cap).
-
----
 
 ### License
 MIT
-
