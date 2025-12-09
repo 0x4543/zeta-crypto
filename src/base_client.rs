@@ -1,7 +1,8 @@
 use alloy::primitives::Address;
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
-use alloy::transport::http::{Client, Http};
+use alloy::transports::http::Http;
 use anyhow::Result;
+use reqwest::Client;
 use std::str::FromStr;
 use url::Url;
 
