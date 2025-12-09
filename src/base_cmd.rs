@@ -31,3 +31,11 @@ pub async fn handle_send(
 
     Ok(())
 }
+
+pub async fn handle_resolve(rpc_url: &str, name: &str) -> Result<()> {
+    let client = BaseClient::new(rpc_url)?;
+    println!("Resolving {}...", name);
+    let address = client.resolve_name(name).await?;
+    println!("{} -> {}", name, address);
+    Ok(())
+}
