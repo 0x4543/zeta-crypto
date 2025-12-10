@@ -110,7 +110,20 @@ enum BaseCommands {
     Balance {
         address: String,
     },
+    BalanceUsdc {
+        address: String,
+    },
     Send {
+        #[arg(long)]
+        phrase: String,
+        #[arg(long)]
+        pass: Option<String>,
+        #[arg(long)]
+        to: String,
+        #[arg(long)]
+        amount: String,
+    },
+    SendUsdc {
         #[arg(long)]
         phrase: String,
         #[arg(long)]
@@ -134,13 +147,26 @@ async fn main() -> Result<()> {
             BaseCommands::Balance { address } => {
                 base_cmd::handle_balance(BASE_RPC_URL, &address).await?;
             }
+            BaseCommands::BalanceUsdc { address } => {
+                base_cmd::handle_balance_usdc(BASE_RPC_URL, &address).await?;
+            }
             BaseCommands::Send {
                 phrase,
                 pass,
                 to,
                 amount,
             } => {
-                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount).await?;
+                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount)
+                    .await?;
+            }
+            BaseCommands::SendUsdc {
+                phrase,
+                pass,
+                to,
+                amount,
+            } => {
+                base_cmd::handle_send_usdc(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount)
+                    .await?;
             }
             BaseCommands::Resolve { name } => {
                 base_cmd::handle_resolve(BASE_RPC_URL, &name).await?;
