@@ -23,6 +23,11 @@ sol! {
         function balanceOf(address account) external view returns (uint256);
         function transfer(address to, uint256 value) external returns (bool);
     }
+
+    #[sol(rpc)]
+    interface ZetaMultiSender {
+        function disperseEther(address[] recipients, uint256[] values) external payable;
+    }
 }
 
 pub struct BaseClient {
@@ -100,7 +105,7 @@ impl BaseClient {
             .on_http(self.rpc_url.clone());
 
         let bytecode_bytes = hex::decode(bytecode_hex.trim_start_matches("0x"))?;
-        let tx = alloy::rpc::types::TransactionRequest::default().with_input(Bytes::from(bytecode_bytes));
+        let tx = alloy::rpc::types::TransactionRequest::default().input(Bytes::from(bytecode_bytes));
 
         let receipt = provider.send_transaction(tx).await?.get_receipt().await?;
         
@@ -109,6 +114,26 @@ impl BaseClient {
         } else {
             Err(anyhow!("Contract deployment failed: no address returned"))
         }
+    }
+
+    pub async fn disperse_eth(&self, private_key: &[u8], contract_addr: &str, recipients: Vec<Address>, values: Vec<U256>, total_value: U256) -> Result<String> {
+        let signer = PrivateKeySigner::from_slice(private_key)?;
+        let wallet = EthereumWallet::from(signer);
+        let provider = ProviderBuilder::new()
+            .wallet(wallet)
+            .on_http(self.rpc_url.clone());
+
+        let contract = Address::from_str(contract_addr)?;
+        let multisender = ZetaMultiSender::new(contract, &provider);
+
+        let tx_hash = multisender.disperseEther(recipients, values)
+            .value(total_value)
+            .send()
+            .await?
+            .watch()
+            .await?;
+
+        Ok(tx_hash.to_string())
     }
 
     pub async fn resolve_name(&self, name: &str) -> Result<String> {
