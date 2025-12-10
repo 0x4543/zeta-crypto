@@ -1,8 +1,8 @@
+use alloy::network::EthereumWallet;
 use alloy::primitives::{keccak256, Address, FixedBytes, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::sol;
-use alloy::network::EthereumWallet;
 use alloy::transports::http::Http;
 use anyhow::{anyhow, Result};
 use reqwest::Client;
@@ -77,7 +77,12 @@ impl BaseClient {
         Ok(tx_hash.to_string())
     }
 
-    pub async fn send_usdc(&self, private_key: &[u8], to: &str, value_units: U256) -> Result<String> {
+    pub async fn send_usdc(
+        &self,
+        private_key: &[u8],
+        to: &str,
+        value_units: U256,
+    ) -> Result<String> {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
@@ -88,7 +93,12 @@ impl BaseClient {
         let to_addr = Address::from_str(to)?;
         let token = IERC20::new(token_addr, &provider);
 
-        let tx_hash = token.transfer(to_addr, value_units).send().await?.watch().await?;
+        let tx_hash = token
+            .transfer(to_addr, value_units)
+            .send()
+            .await?
+            .watch()
+            .await?;
         Ok(tx_hash.to_string())
     }
 
@@ -112,10 +122,10 @@ impl BaseClient {
                 } else {
                     Ok(address.to_string())
                 }
-            },
-            Err(_) => {
-                Err(anyhow!("Resolution failed. The name might not be registered or Resolver is unavailable."))
             }
+            Err(_) => Err(anyhow!(
+                "Resolution failed. The name might not be registered or Resolver is unavailable."
+            )),
         }
     }
 }
