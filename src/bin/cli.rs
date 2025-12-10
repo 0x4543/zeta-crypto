@@ -136,6 +136,12 @@ enum BaseCommands {
     Resolve {
         name: String,
     },
+    Deploy {
+        #[arg(long)]
+        phrase: String,
+        #[arg(long)]
+        pass: Option<String>,
+    },
 }
 
 #[tokio::main]
@@ -156,7 +162,8 @@ async fn main() -> Result<()> {
                 to,
                 amount,
             } => {
-                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount).await?;
+                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount)
+                    .await?;
             }
             BaseCommands::SendUsdc {
                 phrase,
@@ -169,6 +176,9 @@ async fn main() -> Result<()> {
             }
             BaseCommands::Resolve { name } => {
                 base_cmd::handle_resolve(BASE_RPC_URL, &name).await?;
+            }
+            BaseCommands::Deploy { phrase, pass } => {
+                base_cmd::handle_deploy(BASE_RPC_URL, &phrase, pass.as_deref()).await?;
             }
         },
         Commands::GenMnemonic => {
