@@ -1,8 +1,8 @@
-use alloy::network::EthereumWallet;
 use alloy::primitives::{keccak256, Address, FixedBytes, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::sol;
+use alloy::network::EthereumWallet;
 use alloy::transports::http::Http;
 use anyhow::{anyhow, Result};
 use reqwest::Client;
@@ -10,11 +10,18 @@ use std::str::FromStr;
 use url::Url;
 
 const BASENAMES_RESOLVER: &str = "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD";
+const BASE_USDC_ADDR: &str = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
 sol! {
     #[sol(rpc)]
     interface L2Resolver {
         function addr(bytes32 node) external view returns (address);
+    }
+
+    #[sol(rpc)]
+    interface IERC20 {
+        function balanceOf(address account) external view returns (uint256);
+        function transfer(address to, uint256 value) external returns (bool);
     }
 }
 
@@ -36,6 +43,14 @@ impl BaseClient {
     pub async fn get_balance(&self, address: &str) -> Result<U256> {
         let addr = Address::from_str(address)?;
         let balance = self.provider.get_balance(addr).await?;
+        Ok(balance)
+    }
+
+    pub async fn get_usdc_balance(&self, address: &str) -> Result<U256> {
+        let token_addr = Address::from_str(BASE_USDC_ADDR)?;
+        let owner = Address::from_str(address)?;
+        let token = IERC20::new(token_addr, &self.provider);
+        let balance = token.balanceOf(owner).call().await?._0;
         Ok(balance)
     }
 
@@ -62,6 +77,21 @@ impl BaseClient {
         Ok(tx_hash.to_string())
     }
 
+    pub async fn send_usdc(&self, private_key: &[u8], to: &str, value_units: U256) -> Result<String> {
+        let signer = PrivateKeySigner::from_slice(private_key)?;
+        let wallet = EthereumWallet::from(signer);
+        let provider = ProviderBuilder::new()
+            .wallet(wallet)
+            .on_http(self.rpc_url.clone());
+
+        let token_addr = Address::from_str(BASE_USDC_ADDR)?;
+        let to_addr = Address::from_str(to)?;
+        let token = IERC20::new(token_addr, &provider);
+
+        let tx_hash = token.transfer(to_addr, value_units).send().await?.watch().await?;
+        Ok(tx_hash.to_string())
+    }
+
     pub async fn resolve_name(&self, name: &str) -> Result<String> {
         let normalized_name = if name.ends_with(".base") {
             format!("{}.eth", name)
@@ -82,10 +112,10 @@ impl BaseClient {
                 } else {
                     Ok(address.to_string())
                 }
+            },
+            Err(_) => {
+                Err(anyhow!("Resolution failed. The name might not be registered or Resolver is unavailable."))
             }
-            Err(_) => Err(anyhow!(
-                "Resolution failed. The name might not be registered or Resolver is unavailable."
-            )),
         }
     }
 }
