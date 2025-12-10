@@ -1,4 +1,4 @@
-use alloy::network::{EthereumWallet, TransactionBuilder};
+use alloy::network::EthereumWallet;
 use alloy::primitives::{keccak256, Address, Bytes, FixedBytes, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::signers::local::PrivateKeySigner;
@@ -105,7 +105,7 @@ impl BaseClient {
             .on_http(self.rpc_url.clone());
 
         let bytecode_bytes = hex::decode(bytecode_hex.trim_start_matches("0x"))?;
-        let tx = alloy::rpc::types::TransactionRequest::default().input(Bytes::from(bytecode_bytes));
+        let tx = alloy::rpc::types::TransactionRequest::default().input(Bytes::from(bytecode_bytes).into());
 
         let receipt = provider.send_transaction(tx).await?.get_receipt().await?;
         
