@@ -1,8 +1,8 @@
+use alloy::network::{EthereumWallet, TransactionBuilder};
 use alloy::primitives::{keccak256, Address, Bytes, FixedBytes, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::sol;
-use alloy::network::EthereumWallet;
 use alloy::transports::http::Http;
 use anyhow::{anyhow, Result};
 use reqwest::Client;
