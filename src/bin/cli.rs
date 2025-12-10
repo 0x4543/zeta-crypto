@@ -142,6 +142,16 @@ enum BaseCommands {
         #[arg(long)]
         pass: Option<String>,
     },
+    DisperseEth {
+        #[arg(long)]
+        phrase: String,
+        #[arg(long)]
+        pass: Option<String>,
+        #[arg(long)]
+        contract: String,
+        #[arg(long, num_args = 1.., value_delimiter = ' ')]
+        pairs: Vec<String>,
+    },
 }
 
 #[tokio::main]
@@ -179,6 +189,9 @@ async fn main() -> Result<()> {
             }
             BaseCommands::Deploy { phrase, pass } => {
                 base_cmd::handle_deploy(BASE_RPC_URL, &phrase, pass.as_deref()).await?;
+            }
+            BaseCommands::DisperseEth { phrase, pass, contract, pairs } => {
+                base_cmd::handle_disperse_eth(BASE_RPC_URL, &phrase, pass.as_deref(), &contract, pairs).await?;
             }
         },
         Commands::GenMnemonic => {
