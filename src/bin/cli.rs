@@ -172,8 +172,7 @@ async fn main() -> Result<()> {
                 to,
                 amount,
             } => {
-                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount)
-                    .await?;
+                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount).await?;
             }
             BaseCommands::SendUsdc {
                 phrase,
@@ -190,8 +189,20 @@ async fn main() -> Result<()> {
             BaseCommands::Deploy { phrase, pass } => {
                 base_cmd::handle_deploy(BASE_RPC_URL, &phrase, pass.as_deref()).await?;
             }
-            BaseCommands::DisperseEth { phrase, pass, contract, pairs } => {
-                base_cmd::handle_disperse_eth(BASE_RPC_URL, &phrase, pass.as_deref(), &contract, pairs).await?;
+            BaseCommands::DisperseEth {
+                phrase,
+                pass,
+                contract,
+                pairs,
+            } => {
+                base_cmd::handle_disperse_eth(
+                    BASE_RPC_URL,
+                    &phrase,
+                    pass.as_deref(),
+                    &contract,
+                    pairs,
+                )
+                .await?;
             }
         },
         Commands::GenMnemonic => {

@@ -82,7 +82,12 @@ impl BaseClient {
         Ok(tx_hash.to_string())
     }
 
-    pub async fn send_usdc(&self, private_key: &[u8], to: &str, value_units: U256) -> Result<String> {
+    pub async fn send_usdc(
+        &self,
+        private_key: &[u8],
+        to: &str,
+        value_units: U256,
+    ) -> Result<String> {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
@@ -93,7 +98,12 @@ impl BaseClient {
         let to_addr = Address::from_str(to)?;
         let token = IERC20::new(token_addr, &provider);
 
-        let tx_hash = token.transfer(to_addr, value_units).send().await?.watch().await?;
+        let tx_hash = token
+            .transfer(to_addr, value_units)
+            .send()
+            .await?
+            .watch()
+            .await?;
         Ok(tx_hash.to_string())
     }
 
@@ -105,10 +115,11 @@ impl BaseClient {
             .on_http(self.rpc_url.clone());
 
         let bytecode_bytes = hex::decode(bytecode_hex.trim_start_matches("0x"))?;
-        let tx = alloy::rpc::types::TransactionRequest::default().input(Bytes::from(bytecode_bytes).into());
+        let tx = alloy::rpc::types::TransactionRequest::default()
+            .input(Bytes::from(bytecode_bytes).into());
 
         let receipt = provider.send_transaction(tx).await?.get_receipt().await?;
-        
+
         if let Some(addr) = receipt.contract_address {
             Ok(addr.to_string())
         } else {
@@ -116,7 +127,14 @@ impl BaseClient {
         }
     }
 
-    pub async fn disperse_eth(&self, private_key: &[u8], contract_addr: &str, recipients: Vec<Address>, values: Vec<U256>, total_value: U256) -> Result<String> {
+    pub async fn disperse_eth(
+        &self,
+        private_key: &[u8],
+        contract_addr: &str,
+        recipients: Vec<Address>,
+        values: Vec<U256>,
+        total_value: U256,
+    ) -> Result<String> {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
@@ -126,7 +144,8 @@ impl BaseClient {
         let contract = Address::from_str(contract_addr)?;
         let multisender = ZetaMultiSender::new(contract, &provider);
 
-        let tx_hash = multisender.disperseEther(recipients, values)
+        let tx_hash = multisender
+            .disperseEther(recipients, values)
             .value(total_value)
             .send()
             .await?
@@ -156,10 +175,10 @@ impl BaseClient {
                 } else {
                     Ok(address.to_string())
                 }
-            },
-            Err(_) => {
-                Err(anyhow!("Resolution failed. The name might not be registered or Resolver is unavailable."))
             }
+            Err(_) => Err(anyhow!(
+                "Resolution failed. The name might not be registered or Resolver is unavailable."
+            )),
         }
     }
 }

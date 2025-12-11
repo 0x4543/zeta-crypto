@@ -1,7 +1,7 @@
 use crate::base_client::BaseClient;
 use crate::Wallet;
-use alloy::primitives::{Address, U256};
 use alloy::primitives::utils::{format_units, parse_units};
+use alloy::primitives::{Address, U256};
 use anyhow::{anyhow, Result};
 use std::str::FromStr;
 
@@ -97,7 +97,7 @@ pub async fn handle_deploy(rpc_url: &str, phrase: &str, pass: Option<&str>) -> R
     let contract_addr = client.deploy_contract(&pk, MULTISENDER_BYTECODE).await?;
     println!("Contract deployed successfully!");
     println!("Address: {}", contract_addr);
-    
+
     Ok(())
 }
 
@@ -121,7 +121,7 @@ pub async fn handle_disperse_eth(
         if parts.len() != 2 {
             return Err(anyhow!("Invalid format. Use address=amount"));
         }
-        
+
         let addr_str = resolve_if_needed(&client, parts[0]).await?;
         let addr = Address::from_str(&addr_str)?;
         let val_wei: U256 = parse_units(parts[1], "ether")?.into();
@@ -131,9 +131,15 @@ pub async fn handle_disperse_eth(
         total_value += val_wei;
     }
 
-    println!("Dispersing {} ETH total to {} recipients...", format_units(total_value, "ether")?, recipients.len());
-    
-    let tx_hash = client.disperse_eth(&pk, contract, recipients, values, total_value).await?;
+    println!(
+        "Dispersing {} ETH total to {} recipients...",
+        format_units(total_value, "ether")?,
+        recipients.len()
+    );
+
+    let tx_hash = client
+        .disperse_eth(&pk, contract, recipients, values, total_value)
+        .await?;
     println!("Batch transaction sent! Hash: {}", tx_hash);
 
     Ok(())
