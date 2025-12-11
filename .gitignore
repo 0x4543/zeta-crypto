@@ -1,4 +1,10 @@
 /target
+/debug
+/release
 **/*.rs.bk
-Cargo.lock
+*.swp
 .DS_Store
+.idea
+.vscode
+.env
+Cargo.lock
