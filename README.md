@@ -3,20 +3,33 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Language: Rust](https://img.shields.io/badge/language-Rust-orange)
 ![Network: Base](https://img.shields.io/badge/network-Base_Mainnet-blue)
-![Status: Active](https://img.shields.io/badge/status-active-green)
+![Status: Production](https://img.shields.io/badge/status-production-green)
 
-`zeta-crypto` is a powerful Rust-based command-line tool designed for the **Base Network** ecosystem. It features a fully functional CLI wallet, **Basenames** resolution support, cryptographic primitives, and WalletConnect session management.
+`zeta-crypto` is a professional-grade Rust command-line tool for the **Base Network**. It provides a secure wallet, **Basenames** resolution, and advanced developer tools like **Batch Transfers (Disperse)** and **Contract Deployment**.
 
 Built with **Alloy**, **Tokio**, and **Rust** for maximum performance and type safety.
 
 ---
 
+## 🔐 Security & Setup
+
+To avoid exposing your seed phrase in command history, use environment variables.
+
+```bash
+export ZETA_PHRASE="your twelve words mnemonic phrase here"
+export ZETA_PASS="optional_password" # Optional
+```
+
+Once set, you can run commands without the `--phrase` flag.
+
+---
+
 ## 🔵 Base Network Features
 
-Interact directly with the Base Mainnet.
+Interact directly with the Base Mainnet (Chain ID: 8453).
 
 ### Check Balance
-Query the native ETH or USDC balance of any address or Basename.
+Query ETH or USDC balance.
 
 ```bash
 # ETH Balance
@@ -26,77 +39,73 @@ zeta-cli base balance jesse.base
 zeta-cli base balance-usdc jesse.base
 ```
 
-**Output:**
-```
-Balance: 0.0842 ETH
-```
-
 ### Resolve Basenames
-Resolve `.base` (and `.eth`) names to their underlying addresses using the official L2 Resolver.
+Resolve `.base` (and `.eth`) names using the official L2 Resolver.
 
 ```bash
 zeta-cli base resolve den.base
-```
-
-**Output:**
-```
-Resolving den.base...
-den.base -> 0x2211d1D0020DAEA8039E46Cf1367962070d77DA9
+# Output: den.base -> 0x...
 ```
 
 ### Send Assets
-Send Ether or USDC transactions. Supports both raw addresses and Basenames as destinations.
+Send Ether or USDC. Supports auto-resolution of Basenames.
 
 ```bash
 # Send ETH
-zeta-cli base send --phrase "..." --to jesse.base --amount 0.001
+zeta-cli base send --to jesse.base --amount 0.001
 
 # Send USDC
-zeta-cli base send-usdc --phrase "..." --to jesse.base --amount 5.0
+zeta-cli base send-usdc --to jesse.base --amount 5.0
 ```
-
-**Features:**
-* **Auto-Resolution:** Automatically detects if `--to` is a Basename and resolves it before sending.
-* **Safety:** Derives private key locally from mnemonic; keys are never stored in plaintext.
 
 ---
 
 ## 🏗 Builder Tools (MultiSender)
 
-Deploy and interact with the ZetaMultiSender contract (Disperse) to batch transactions and generate on-chain activity.
+Deploy and interact with the ZetaMultiSender contract (Disperse) to batch transactions.
 
-### Deploy Contract
+### 1. Deploy Contract
 Deploy your own instance of the MultiSender contract to Base.
 
 ```bash
-zeta-cli base deploy --phrase "your mnemonic phrase"
+zeta-cli base deploy
 ```
+*Save the contract address from the output.*
 
-**Output:**
-```
-Deploying ZetaMultiSender contract...
-Contract deployed successfully!
-Address: 0x...
-```
-
-### Disperse ETH (Batch Send)
+### 2. Disperse ETH
 Send ETH to multiple recipients in a single transaction.
-
-Format: `address=amount_in_eth`
 
 ```bash
 zeta-cli base disperse-eth \
-  --phrase "your mnemonic phrase" \
   --contract 0xYourContractAddress... \
   0xRecipient1...=0.001 \
-  0xRecipient2...=0.002 \
   vitalik.eth=0.005
 ```
 
-**Features:**
-* **Gas Saving:** Significantly cheaper than sending individual transactions.
-* **Auto-Resolution:** Supports Basenames/ENS in the recipient list.
-* **Safety:** Excess ETH sent to the contract is automatically refunded.
+### 3. Disperse USDC (ERC-20)
+Batch send ERC-20 tokens. Requires approval first.
+
+**Step A: Approve**
+Allow the MultiSender contract to spend your USDC.
+*(USDC Address on Base: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913)*
+
+```bash
+zeta-cli base approve \
+  --token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 \
+  --spender 0xYourContractAddress... \
+  --amount 100 \
+  --decimals 6
+```
+
+**Step B: Disperse**
+```bash
+zeta-cli base disperse-token \
+  --contract 0xYourContractAddress... \
+  --token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 \
+  --decimals 6 \
+  0xRecipient1...=10.5 \
+  jesse.base=50.0
+```
 
 ---
 
@@ -106,25 +115,21 @@ zeta-cli base disperse-eth \
 ```bash
 zeta-cli gen-mnemonic
 ```
-Generates a new secure BIP39 mnemonic phrase.
 
 #### Derive Wallet Address
 ```bash
-zeta-cli derive-wallet --phrase "<mnemonic>" --pass "<optional_password>"
+zeta-cli derive-wallet --phrase "..."
 ```
-Derives the Ethereum/Base address (0x...) from the mnemonic.
 
 #### Sign Message
 ```bash
-zeta-cli sign --phrase "<mnemonic>" --msg "hello base"
+zeta-cli sign --phrase "..." --msg "hello base"
 ```
-Signs a message using the derived private key (ECDSA).
 
 #### Verify Signature
 ```bash
 zeta-cli verify --pubhex <public_key_hex> --msg "hello base" --sig <signature_hex>
 ```
-Verifies a cryptographic signature.
 
 ---
 
