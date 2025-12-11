@@ -1,4 +1,4 @@
-use alloy::network::{EthereumWallet, TransactionBuilder};
+use alloy::network::EthereumWallet;
 use alloy::primitives::{keccak256, Address, Bytes, FixedBytes, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::signers::local::PrivateKeySigner;
