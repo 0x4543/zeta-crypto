@@ -1,11 +1,12 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use std::env;
 use zeta_crypto::base_cmd;
 use zeta_crypto::crypto_cmd;
 use zeta_crypto::sysinfo_cmd;
 use zeta_crypto::walletconnect_cmd::{self, WcAction};
 
-const BASE_RPC_URL: &str = "https://mainnet.base.org";
+const DEFAULT_BASE_RPC: &str = "https://mainnet.base.org";
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -195,14 +196,15 @@ enum BaseCommands {
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+    let rpc_url = env::var("ZETA_RPC_URL").unwrap_or_else(|_| DEFAULT_BASE_RPC.to_string());
 
     match cli.cmd {
         Commands::Base { cmd } => match cmd {
             BaseCommands::Balance { address } => {
-                base_cmd::handle_balance(BASE_RPC_URL, &address).await?;
+                base_cmd::handle_balance(&rpc_url, &address).await?;
             }
             BaseCommands::BalanceUsdc { address } => {
-                base_cmd::handle_balance_usdc(BASE_RPC_URL, &address).await?;
+                base_cmd::handle_balance_usdc(&rpc_url, &address).await?;
             }
             BaseCommands::Send {
                 phrase,
@@ -210,7 +212,8 @@ async fn main() -> Result<()> {
                 to,
                 amount,
             } => {
-                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount).await?;
+                base_cmd::handle_send(&rpc_url, &phrase, pass.as_deref(), &to, &amount)
+                    .await?;
             }
             BaseCommands::SendUsdc {
                 phrase,
@@ -218,14 +221,14 @@ async fn main() -> Result<()> {
                 to,
                 amount,
             } => {
-                base_cmd::handle_send_usdc(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount)
+                base_cmd::handle_send_usdc(&rpc_url, &phrase, pass.as_deref(), &to, &amount)
                     .await?;
             }
             BaseCommands::Resolve { name } => {
-                base_cmd::handle_resolve(BASE_RPC_URL, &name).await?;
+                base_cmd::handle_resolve(&rpc_url, &name).await?;
             }
             BaseCommands::Deploy { phrase, pass } => {
-                base_cmd::handle_deploy(BASE_RPC_URL, &phrase, pass.as_deref()).await?;
+                base_cmd::handle_deploy(&rpc_url, &phrase, pass.as_deref()).await?;
             }
             BaseCommands::DisperseEth {
                 phrase,
@@ -234,7 +237,7 @@ async fn main() -> Result<()> {
                 pairs,
             } => {
                 base_cmd::handle_disperse_eth(
-                    BASE_RPC_URL,
+                    &rpc_url,
                     &phrase,
                     pass.as_deref(),
                     &contract,
@@ -251,7 +254,7 @@ async fn main() -> Result<()> {
                 decimals,
             } => {
                 base_cmd::handle_approve(
-                    BASE_RPC_URL,
+                    &rpc_url,
                     &phrase,
                     pass.as_deref(),
                     &token,
@@ -270,7 +273,7 @@ async fn main() -> Result<()> {
                 decimals,
             } => {
                 base_cmd::handle_disperse_token(
-                    BASE_RPC_URL,
+                    &rpc_url,
                     &phrase,
                     pass.as_deref(),
                     &contract,
