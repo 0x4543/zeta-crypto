@@ -1,7 +1,7 @@
 use crate::base_client::BaseClient;
 use crate::Wallet;
-use alloy::primitives::{Address, U256};
 use alloy::primitives::utils::{format_units, parse_units};
+use alloy::primitives::{Address, U256};
 use anyhow::{anyhow, Result};
 use std::str::FromStr;
 
@@ -20,7 +20,11 @@ async fn resolve_if_needed(client: &BaseClient, input: &str) -> Result<String> {
 async fn check_chain_id(client: &BaseClient) -> Result<()> {
     let chain_id = client.get_chain_id().await?;
     if chain_id != BASE_CHAIN_ID {
-        return Err(anyhow!("Wrong chain ID: {}. Expected Base Mainnet ({})", chain_id, BASE_CHAIN_ID));
+        return Err(anyhow!(
+            "Wrong chain ID: {}. Expected Base Mainnet ({})",
+            chain_id,
+            BASE_CHAIN_ID
+        ));
     }
     Ok(())
 }
@@ -112,7 +116,7 @@ pub async fn handle_deploy(rpc_url: &str, phrase: &str, pass: Option<&str>) -> R
     let contract_addr = client.deploy_contract(&pk, MULTISENDER_BYTECODE).await?;
     println!("Contract deployed successfully!");
     println!("Address: {}", contract_addr);
-    
+
     Ok(())
 }
 
@@ -137,7 +141,7 @@ pub async fn handle_disperse_eth(
         if parts.len() != 2 {
             return Err(anyhow!("Invalid format. Use address=amount"));
         }
-        
+
         let addr_str = resolve_if_needed(&client, parts[0]).await?;
         let addr = Address::from_str(&addr_str)?;
         let val_wei: U256 = parse_units(parts[1], "ether")?.into();
@@ -147,9 +151,15 @@ pub async fn handle_disperse_eth(
         total_value += val_wei;
     }
 
-    println!("Dispersing {} ETH total to {} recipients...", format_units(total_value, "ether")?, recipients.len());
-    
-    let tx_hash = client.disperse_eth(&pk, contract, recipients, values, total_value).await?;
+    println!(
+        "Dispersing {} ETH total to {} recipients...",
+        format_units(total_value, "ether")?,
+        recipients.len()
+    );
+
+    let tx_hash = client
+        .disperse_eth(&pk, contract, recipients, values, total_value)
+        .await?;
     println!("Batch transaction sent! Hash: {}", tx_hash);
 
     Ok(())
@@ -172,7 +182,9 @@ pub async fn handle_approve(
     let amount_units: U256 = parse_units(amount, decimals)?.into();
 
     println!("Approving {} tokens for spender {}...", amount, spender);
-    let tx_hash = client.approve_token(&pk, token, spender, amount_units).await?;
+    let tx_hash = client
+        .approve_token(&pk, token, spender, amount_units)
+        .await?;
     println!("Approval sent! Hash: {}", tx_hash);
 
     Ok(())
@@ -201,7 +213,7 @@ pub async fn handle_disperse_token(
         if parts.len() != 2 {
             return Err(anyhow!("Invalid format. Use address=amount"));
         }
-        
+
         let addr_str = resolve_if_needed(&client, parts[0]).await?;
         let addr = Address::from_str(&addr_str)?;
         let val_units: U256 = parse_units(parts[1], decimals)?.into();
@@ -211,9 +223,15 @@ pub async fn handle_disperse_token(
         total_value += val_units;
     }
 
-    println!("Dispersing {} tokens total to {} recipients...", format_units(total_value, decimals)?, recipients.len());
-    
-    let tx_hash = client.disperse_token(&pk, contract, token, recipients, values).await?;
+    println!(
+        "Dispersing {} tokens total to {} recipients...",
+        format_units(total_value, decimals)?,
+        recipients.len()
+    );
+
+    let tx_hash = client
+        .disperse_token(&pk, contract, token, recipients, values)
+        .await?;
     println!("Batch token transaction sent! Hash: {}", tx_hash);
 
     Ok(())
