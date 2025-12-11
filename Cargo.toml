@@ -1,13 +1,13 @@
 [package]
 name = "zeta_crypto"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/denagain/zeta-crypto"
-homepage = "https://github.com/denagain/zeta-crypto"
+repository = "https://github.com/0x4543/zeta-crypto"
+homepage = "https://github.com/0x4543/zeta-crypto"
 readme = "README.md"
-description = "Rust-based crypto CLI playground for WalletConnect, mnemonic, and signing experiments."
-keywords = ["crypto", "wallet", "cli", "walletconnect", "rust"]
+description = "Professional Rust CLI for Base Network: Wallet, Basenames, and Batch Transfers."
+keywords = ["crypto", "base", "wallet", "cli", "alloy"]
 categories = ["cryptography::cryptocurrencies", "command-line-utilities"]
 
 [dependencies]
