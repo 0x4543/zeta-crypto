@@ -226,3 +226,37 @@ pub async fn handle_disperse_token(
 
     Ok(())
 }
+
+pub async fn handle_gas_price(rpc_url: &str) -> Result<()> {
+    let client = BaseClient::new(rpc_url)?;
+    check_chain_id(&client).await?;
+    let price = client.get_gas_price().await?;
+    let gwei = format_units(price, "gwei")?;
+    println!("Current Gas Price: {} Gwei", gwei);
+    Ok(())
+}
+
+pub async fn handle_allowance(
+    rpc_url: &str,
+    token: &str,
+    owner: &str,
+    spender: &str,
+    decimals: u8,
+) -> Result<()> {
+    let client = BaseClient::new(rpc_url)?;
+    check_chain_id(&client).await?;
+    
+    let owner_addr = resolve_if_needed(&client, owner).await?;
+    let spender_addr = resolve_if_needed(&client, spender).await?;
+    
+    println!("Checking allowance...");
+    println!("Token: {}", token);
+    println!("Owner: {}", owner_addr);
+    println!("Spender: {}", spender_addr);
+
+    let allowance = client.get_allowance(token, &owner_addr, &spender_addr).await?;
+    let formatted = format_units(allowance, decimals)?;
+    
+    println!("Allowance: {} tokens", formatted);
+    Ok(())
+}
