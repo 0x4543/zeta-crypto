@@ -1,4 +1,4 @@
-use alloy::network::EthereumWallet;
+use alloy::network::{EthereumWallet, TransactionBuilder};
 use alloy::primitives::{keccak256, Address, Bytes, FixedBytes, U256};
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::signers::local::PrivateKeySigner;
@@ -22,11 +22,13 @@ sol! {
     interface IERC20 {
         function balanceOf(address account) external view returns (uint256);
         function transfer(address to, uint256 value) external returns (bool);
+        function approve(address spender, uint256 value) external returns (bool);
     }
 
     #[sol(rpc)]
     interface ZetaMultiSender {
         function disperseEther(address[] recipients, uint256[] values) external payable;
+        function disperseToken(address token, address[] recipients, uint256[] values) external;
     }
 }
 
@@ -82,12 +84,7 @@ impl BaseClient {
         Ok(tx_hash.to_string())
     }
 
-    pub async fn send_usdc(
-        &self,
-        private_key: &[u8],
-        to: &str,
-        value_units: U256,
-    ) -> Result<String> {
+    pub async fn send_usdc(&self, private_key: &[u8], to: &str, value_units: U256) -> Result<String> {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
@@ -98,12 +95,7 @@ impl BaseClient {
         let to_addr = Address::from_str(to)?;
         let token = IERC20::new(token_addr, &provider);
 
-        let tx_hash = token
-            .transfer(to_addr, value_units)
-            .send()
-            .await?
-            .watch()
-            .await?;
+        let tx_hash = token.transfer(to_addr, value_units).send().await?.watch().await?;
         Ok(tx_hash.to_string())
     }
 
@@ -115,11 +107,10 @@ impl BaseClient {
             .on_http(self.rpc_url.clone());
 
         let bytecode_bytes = hex::decode(bytecode_hex.trim_start_matches("0x"))?;
-        let tx = alloy::rpc::types::TransactionRequest::default()
-            .input(Bytes::from(bytecode_bytes).into());
+        let tx = alloy::rpc::types::TransactionRequest::default().input(Bytes::from(bytecode_bytes).into());
 
         let receipt = provider.send_transaction(tx).await?.get_receipt().await?;
-
+        
         if let Some(addr) = receipt.contract_address {
             Ok(addr.to_string())
         } else {
@@ -127,14 +118,7 @@ impl BaseClient {
         }
     }
 
-    pub async fn disperse_eth(
-        &self,
-        private_key: &[u8],
-        contract_addr: &str,
-        recipients: Vec<Address>,
-        values: Vec<U256>,
-        total_value: U256,
-    ) -> Result<String> {
+    pub async fn disperse_eth(&self, private_key: &[u8], contract_addr: &str, recipients: Vec<Address>, values: Vec<U256>, total_value: U256) -> Result<String> {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
@@ -144,9 +128,43 @@ impl BaseClient {
         let contract = Address::from_str(contract_addr)?;
         let multisender = ZetaMultiSender::new(contract, &provider);
 
-        let tx_hash = multisender
-            .disperseEther(recipients, values)
+        let tx_hash = multisender.disperseEther(recipients, values)
             .value(total_value)
+            .send()
+            .await?
+            .watch()
+            .await?;
+
+        Ok(tx_hash.to_string())
+    }
+
+    pub async fn approve_token(&self, private_key: &[u8], token_addr: &str, spender: &str, amount: U256) -> Result<String> {
+        let signer = PrivateKeySigner::from_slice(private_key)?;
+        let wallet = EthereumWallet::from(signer);
+        let provider = ProviderBuilder::new()
+            .wallet(wallet)
+            .on_http(self.rpc_url.clone());
+
+        let token = Address::from_str(token_addr)?;
+        let spender_addr = Address::from_str(spender)?;
+        let contract = IERC20::new(token, &provider);
+
+        let tx_hash = contract.approve(spender_addr, amount).send().await?.watch().await?;
+        Ok(tx_hash.to_string())
+    }
+
+    pub async fn disperse_token(&self, private_key: &[u8], contract_addr: &str, token_addr: &str, recipients: Vec<Address>, values: Vec<U256>) -> Result<String> {
+        let signer = PrivateKeySigner::from_slice(private_key)?;
+        let wallet = EthereumWallet::from(signer);
+        let provider = ProviderBuilder::new()
+            .wallet(wallet)
+            .on_http(self.rpc_url.clone());
+
+        let contract = Address::from_str(contract_addr)?;
+        let token = Address::from_str(token_addr)?;
+        let multisender = ZetaMultiSender::new(contract, &provider);
+
+        let tx_hash = multisender.disperseToken(token, recipients, values)
             .send()
             .await?
             .watch()
@@ -175,10 +193,10 @@ impl BaseClient {
                 } else {
                     Ok(address.to_string())
                 }
+            },
+            Err(_) => {
+                Err(anyhow!("Resolution failed. The name might not be registered or Resolver is unavailable."))
             }
-            Err(_) => Err(anyhow!(
-                "Resolution failed. The name might not be registered or Resolver is unavailable."
-            )),
         }
     }
 }
