@@ -222,8 +222,7 @@ async fn main() -> Result<()> {
                 to,
                 amount,
             } => {
-                base_cmd::handle_send(&rpc_url, &phrase, pass.as_deref(), &to, &amount)
-                    .await?;
+                base_cmd::handle_send(&rpc_url, &phrase, pass.as_deref(), &to, &amount).await?;
             }
             BaseCommands::SendUsdc {
                 phrase,
@@ -246,14 +245,8 @@ async fn main() -> Result<()> {
                 contract,
                 pairs,
             } => {
-                base_cmd::handle_disperse_eth(
-                    &rpc_url,
-                    &phrase,
-                    pass.as_deref(),
-                    &contract,
-                    pairs,
-                )
-                .await?;
+                base_cmd::handle_disperse_eth(&rpc_url, &phrase, pass.as_deref(), &contract, pairs)
+                    .await?;
             }
             BaseCommands::Approve {
                 phrase,
