@@ -25,17 +25,25 @@ enum Commands {
     HealthCheck,
     Cleanup,
     DeriveWallet {
+        #[arg(long, env = "ZETA_PHRASE")]
         phrase: String,
+        #[arg(long, env = "ZETA_PASS")]
         pass: Option<String>,
     },
     Sign {
+        #[arg(long, env = "ZETA_PHRASE")]
         phrase: String,
+        #[arg(long, env = "ZETA_PASS")]
         pass: Option<String>,
+        #[arg(long)]
         msg: String,
     },
     Verify {
+        #[arg(long)]
         pubhex: String,
+        #[arg(long)]
         msg: String,
+        #[arg(long)]
         sig: String,
     },
     WalletConnect {
@@ -94,7 +102,9 @@ enum Commands {
     WalletConnectActive,
     ShowPeer,
     PrintAddress {
+        #[arg(long, env = "ZETA_PHRASE")]
         phrase: String,
+        #[arg(long, env = "ZETA_PASS")]
         pass: Option<String>,
     },
     LogCount,
@@ -114,9 +124,9 @@ enum BaseCommands {
         address: String,
     },
     Send {
-        #[arg(long)]
+        #[arg(long, env = "ZETA_PHRASE")]
         phrase: String,
-        #[arg(long)]
+        #[arg(long, env = "ZETA_PASS")]
         pass: Option<String>,
         #[arg(long)]
         to: String,
@@ -124,9 +134,9 @@ enum BaseCommands {
         amount: String,
     },
     SendUsdc {
-        #[arg(long)]
+        #[arg(long, env = "ZETA_PHRASE")]
         phrase: String,
-        #[arg(long)]
+        #[arg(long, env = "ZETA_PASS")]
         pass: Option<String>,
         #[arg(long)]
         to: String,
@@ -137,15 +147,15 @@ enum BaseCommands {
         name: String,
     },
     Deploy {
-        #[arg(long)]
+        #[arg(long, env = "ZETA_PHRASE")]
         phrase: String,
-        #[arg(long)]
+        #[arg(long, env = "ZETA_PASS")]
         pass: Option<String>,
     },
     DisperseEth {
-        #[arg(long)]
+        #[arg(long, env = "ZETA_PHRASE")]
         phrase: String,
-        #[arg(long)]
+        #[arg(long, env = "ZETA_PASS")]
         pass: Option<String>,
         #[arg(long)]
         contract: String,
@@ -172,7 +182,8 @@ async fn main() -> Result<()> {
                 to,
                 amount,
             } => {
-                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount).await?;
+                base_cmd::handle_send(BASE_RPC_URL, &phrase, pass.as_deref(), &to, &amount)
+                    .await?;
             }
             BaseCommands::SendUsdc {
                 phrase,
@@ -189,20 +200,8 @@ async fn main() -> Result<()> {
             BaseCommands::Deploy { phrase, pass } => {
                 base_cmd::handle_deploy(BASE_RPC_URL, &phrase, pass.as_deref()).await?;
             }
-            BaseCommands::DisperseEth {
-                phrase,
-                pass,
-                contract,
-                pairs,
-            } => {
-                base_cmd::handle_disperse_eth(
-                    BASE_RPC_URL,
-                    &phrase,
-                    pass.as_deref(),
-                    &contract,
-                    pairs,
-                )
-                .await?;
+            BaseCommands::DisperseEth { phrase, pass, contract, pairs } => {
+                base_cmd::handle_disperse_eth(BASE_RPC_URL, &phrase, pass.as_deref(), &contract, pairs).await?;
             }
         },
         Commands::GenMnemonic => {
