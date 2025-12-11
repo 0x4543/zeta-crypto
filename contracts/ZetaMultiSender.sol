@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 interface IERC20 {
@@ -18,7 +19,8 @@ contract ZetaMultiSender {
         
         uint256 balance = address(this).balance;
         if (balance > 0) {
-            payable(msg.sender).transfer(balance);
+            (bool successRefund, ) = payable(msg.sender).call{value: balance}("");
+            require(successRefund, "Refund failed");
         }
 
         emit MultiSendEth(msg.value, msg.sender);
