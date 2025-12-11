@@ -1,30 +1,32 @@
-name: Rust CI (Light)
+name: Rust CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: clippy
+    - name: Update Rust
+      run: rustup update stable && rustup default stable
 
-      - name: Check compilation
-        run: cargo check
+    - name: Build
+      run: cargo build --verbose
 
-      - name: Build release binary
-        run: cargo build --release
+    - name: Run tests
+      run: cargo test --verbose
 
-      - name: Clippy (non-blocking)
-        run: cargo clippy --all-targets || true
+    - name: Check Formatting
+      run: cargo fmt --all -- --check
+
+    - name: Lint with Clippy
+      run: cargo clippy --all-targets -- -D warnings
