@@ -162,6 +162,34 @@ enum BaseCommands {
         #[arg(long, num_args = 1.., value_delimiter = ' ')]
         pairs: Vec<String>,
     },
+    Approve {
+        #[arg(long, env = "ZETA_PHRASE")]
+        phrase: String,
+        #[arg(long, env = "ZETA_PASS")]
+        pass: Option<String>,
+        #[arg(long)]
+        token: String,
+        #[arg(long)]
+        spender: String,
+        #[arg(long)]
+        amount: String,
+        #[arg(long, default_value_t = 18)]
+        decimals: u8,
+    },
+    DisperseToken {
+        #[arg(long, env = "ZETA_PHRASE")]
+        phrase: String,
+        #[arg(long, env = "ZETA_PASS")]
+        pass: Option<String>,
+        #[arg(long)]
+        contract: String,
+        #[arg(long)]
+        token: String,
+        #[arg(long, num_args = 1.., value_delimiter = ' ')]
+        pairs: Vec<String>,
+        #[arg(long, default_value_t = 18)]
+        decimals: u8,
+    },
 }
 
 #[tokio::main]
@@ -200,8 +228,58 @@ async fn main() -> Result<()> {
             BaseCommands::Deploy { phrase, pass } => {
                 base_cmd::handle_deploy(BASE_RPC_URL, &phrase, pass.as_deref()).await?;
             }
-            BaseCommands::DisperseEth { phrase, pass, contract, pairs } => {
-                base_cmd::handle_disperse_eth(BASE_RPC_URL, &phrase, pass.as_deref(), &contract, pairs).await?;
+            BaseCommands::DisperseEth {
+                phrase,
+                pass,
+                contract,
+                pairs,
+            } => {
+                base_cmd::handle_disperse_eth(
+                    BASE_RPC_URL,
+                    &phrase,
+                    pass.as_deref(),
+                    &contract,
+                    pairs,
+                )
+                .await?;
+            }
+            BaseCommands::Approve {
+                phrase,
+                pass,
+                token,
+                spender,
+                amount,
+                decimals,
+            } => {
+                base_cmd::handle_approve(
+                    BASE_RPC_URL,
+                    &phrase,
+                    pass.as_deref(),
+                    &token,
+                    &spender,
+                    &amount,
+                    decimals,
+                )
+                .await?;
+            }
+            BaseCommands::DisperseToken {
+                phrase,
+                pass,
+                contract,
+                token,
+                pairs,
+                decimals,
+            } => {
+                base_cmd::handle_disperse_token(
+                    BASE_RPC_URL,
+                    &phrase,
+                    pass.as_deref(),
+                    &contract,
+                    &token,
+                    pairs,
+                    decimals,
+                )
+                .await?;
             }
         },
         Commands::GenMnemonic => {
