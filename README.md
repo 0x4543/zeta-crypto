@@ -16,14 +16,14 @@ Built with **Alloy**, **Tokio**, and **Rust** for maximum performance and type s
 Interact directly with the Base Mainnet.
 
 ### Check Balance
-Query the native ETH balance of any address or Basename.
+Query the native ETH or USDC balance of any address or Basename.
 
 ```bash
-# Using a hex address
-zeta-cli base balance 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-
-# Using a Basename (auto-resolves)
+# ETH Balance
 zeta-cli base balance jesse.base
+
+# USDC Balance
+zeta-cli base balance-usdc jesse.base
 ```
 
 **Output:**
@@ -44,26 +44,59 @@ Resolving den.base...
 den.base -> 0x2211d1D0020DAEA8039E46Cf1367962070d77DA9
 ```
 
-### Send ETH
-Send Ether transactions. Supports both raw addresses and Basenames as destinations.
+### Send Assets
+Send Ether or USDC transactions. Supports both raw addresses and Basenames as destinations.
 
 ```bash
-zeta-cli base send \
-  --phrase "seed phrase here..." \
-  --to jesse.base \
-  --amount 0.001
+# Send ETH
+zeta-cli base send --phrase "..." --to jesse.base --amount 0.001
+
+# Send USDC
+zeta-cli base send-usdc --phrase "..." --to jesse.base --amount 5.0
 ```
 
 **Features:**
 * **Auto-Resolution:** Automatically detects if `--to` is a Basename and resolves it before sending.
 * **Safety:** Derives private key locally from mnemonic; keys are never stored in plaintext.
 
+---
+
+## 🏗 Builder Tools (MultiSender)
+
+Deploy and interact with the ZetaMultiSender contract (Disperse) to batch transactions and generate on-chain activity.
+
+### Deploy Contract
+Deploy your own instance of the MultiSender contract to Base.
+
+```bash
+zeta-cli base deploy --phrase "your mnemonic phrase"
+```
+
 **Output:**
 ```
-Resolving destination: jesse.base
-Sending 0.001 ETH to 0x2211...
-Transaction sent! Hash: 0xab12...
+Deploying ZetaMultiSender contract...
+Contract deployed successfully!
+Address: 0x...
 ```
+
+### Disperse ETH (Batch Send)
+Send ETH to multiple recipients in a single transaction.
+
+Format: `address=amount_in_eth`
+
+```bash
+zeta-cli base disperse-eth \
+  --phrase "your mnemonic phrase" \
+  --contract 0xYourContractAddress... \
+  0xRecipient1...=0.001 \
+  0xRecipient2...=0.002 \
+  vitalik.eth=0.005
+```
+
+**Features:**
+* **Gas Saving:** Significantly cheaper than sending individual transactions.
+* **Auto-Resolution:** Supports Basenames/ENS in the recipient list.
+* **Safety:** Excess ETH sent to the contract is automatically refunded.
 
 ---
 
