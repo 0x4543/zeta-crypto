@@ -1,12 +1,11 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use std::env;
 use zeta_crypto::base_cmd;
 use zeta_crypto::crypto_cmd;
 use zeta_crypto::sysinfo_cmd;
 use zeta_crypto::walletconnect_cmd::{self, WcAction};
 
-const DEFAULT_BASE_RPC: &str = "https://mainnet.base.org";
+const BASE_RPC_URL: &str = "https://mainnet.base.org";
 
 #[derive(Parser)]
 #[command(name = "zeta-cli", version, about = "zeta-cli: tiny crypto playground")]
@@ -191,12 +190,23 @@ enum BaseCommands {
         #[arg(long, default_value_t = 18)]
         decimals: u8,
     },
+    Gas,
+    Allowance {
+        #[arg(long)]
+        token: String,
+        #[arg(long)]
+        owner: String,
+        #[arg(long)]
+        spender: String,
+        #[arg(long, default_value_t = 18)]
+        decimals: u8,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let rpc_url = env::var("ZETA_RPC_URL").unwrap_or_else(|_| DEFAULT_BASE_RPC.to_string());
+    let rpc_url = std::env::var("ZETA_RPC_URL").unwrap_or_else(|_| BASE_RPC_URL.to_string());
 
     match cli.cmd {
         Commands::Base { cmd } => match cmd {
@@ -282,6 +292,17 @@ async fn main() -> Result<()> {
                     decimals,
                 )
                 .await?;
+            }
+            BaseCommands::Gas => {
+                base_cmd::handle_gas_price(&rpc_url).await?;
+            }
+            BaseCommands::Allowance {
+                token,
+                owner,
+                spender,
+                decimals,
+            } => {
+                base_cmd::handle_allowance(&rpc_url, &token, &owner, &spender, decimals).await?;
             }
         },
         Commands::GenMnemonic => {
