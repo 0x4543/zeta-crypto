@@ -1,7 +1,7 @@
 use crate::base_client::BaseClient;
 use crate::Wallet;
-use alloy::primitives::utils::{format_units, parse_units};
 use alloy::primitives::{Address, U256};
+use alloy::primitives::utils::{format_units, parse_units};
 use anyhow::{anyhow, Result};
 use std::str::FromStr;
 
@@ -97,7 +97,7 @@ pub async fn handle_deploy(rpc_url: &str, phrase: &str, pass: Option<&str>) -> R
     let contract_addr = client.deploy_contract(&pk, MULTISENDER_BYTECODE).await?;
     println!("Contract deployed successfully!");
     println!("Address: {}", contract_addr);
-
+    
     Ok(())
 }
 
@@ -121,7 +121,7 @@ pub async fn handle_disperse_eth(
         if parts.len() != 2 {
             return Err(anyhow!("Invalid format. Use address=amount"));
         }
-
+        
         let addr_str = resolve_if_needed(&client, parts[0]).await?;
         let addr = Address::from_str(&addr_str)?;
         let val_wei: U256 = parse_units(parts[1], "ether")?.into();
@@ -131,16 +131,72 @@ pub async fn handle_disperse_eth(
         total_value += val_wei;
     }
 
-    println!(
-        "Dispersing {} ETH total to {} recipients...",
-        format_units(total_value, "ether")?,
-        recipients.len()
-    );
-
-    let tx_hash = client
-        .disperse_eth(&pk, contract, recipients, values, total_value)
-        .await?;
+    println!("Dispersing {} ETH total to {} recipients...", format_units(total_value, "ether")?, recipients.len());
+    
+    let tx_hash = client.disperse_eth(&pk, contract, recipients, values, total_value).await?;
     println!("Batch transaction sent! Hash: {}", tx_hash);
+
+    Ok(())
+}
+
+pub async fn handle_approve(
+    rpc_url: &str,
+    phrase: &str,
+    pass: Option<&str>,
+    token: &str,
+    spender: &str,
+    amount: &str,
+    decimals: u8,
+) -> Result<()> {
+    let wallet = Wallet::from_phrase(phrase, pass.unwrap_or(""))?;
+    let pk = wallet.get_private_key_bytes();
+    let client = BaseClient::new(rpc_url)?;
+
+    let amount_units: U256 = parse_units(amount, decimals)?.into();
+
+    println!("Approving {} tokens for spender {}...", amount, spender);
+    let tx_hash = client.approve_token(&pk, token, spender, amount_units).await?;
+    println!("Approval sent! Hash: {}", tx_hash);
+
+    Ok(())
+}
+
+pub async fn handle_disperse_token(
+    rpc_url: &str,
+    phrase: &str,
+    pass: Option<&str>,
+    contract: &str,
+    token: &str,
+    pairs: Vec<String>,
+    decimals: u8,
+) -> Result<()> {
+    let wallet = Wallet::from_phrase(phrase, pass.unwrap_or(""))?;
+    let pk = wallet.get_private_key_bytes();
+    let client = BaseClient::new(rpc_url)?;
+
+    let mut recipients = Vec::new();
+    let mut values = Vec::new();
+    let mut total_value = U256::ZERO;
+
+    for p in pairs {
+        let parts: Vec<&str> = p.split('=').collect();
+        if parts.len() != 2 {
+            return Err(anyhow!("Invalid format. Use address=amount"));
+        }
+        
+        let addr_str = resolve_if_needed(&client, parts[0]).await?;
+        let addr = Address::from_str(&addr_str)?;
+        let val_units: U256 = parse_units(parts[1], decimals)?.into();
+
+        recipients.push(addr);
+        values.push(val_units);
+        total_value += val_units;
+    }
+
+    println!("Dispersing {} tokens total to {} recipients...", format_units(total_value, decimals)?, recipients.len());
+    
+    let tx_hash = client.disperse_token(&pk, contract, token, recipients, values).await?;
+    println!("Batch token transaction sent! Hash: {}", tx_hash);
 
     Ok(())
 }
