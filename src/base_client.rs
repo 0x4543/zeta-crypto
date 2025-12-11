@@ -47,6 +47,11 @@ impl BaseClient {
         })
     }
 
+    pub async fn get_chain_id(&self) -> Result<u64> {
+        let id = self.provider.get_chain_id().await?;
+        Ok(id)
+    }
+
     pub async fn get_balance(&self, address: &str) -> Result<U256> {
         let addr = Address::from_str(address)?;
         let balance = self.provider.get_balance(addr).await?;
