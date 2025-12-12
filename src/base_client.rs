@@ -96,6 +96,7 @@ impl BaseClient {
         let wallet = EthereumWallet::from(signer);
 
         let provider = ProviderBuilder::new()
+            .with_recommended_fillers()
             .wallet(wallet)
             .on_http(self.rpc_url.clone());
 
@@ -123,6 +124,7 @@ impl BaseClient {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
+            .with_recommended_fillers()
             .wallet(wallet)
             .on_http(self.rpc_url.clone());
 
@@ -143,6 +145,7 @@ impl BaseClient {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
+            .with_recommended_fillers()
             .wallet(wallet)
             .on_http(self.rpc_url.clone());
 
@@ -170,6 +173,7 @@ impl BaseClient {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
+            .with_recommended_fillers()
             .wallet(wallet)
             .on_http(self.rpc_url.clone());
 
@@ -197,6 +201,7 @@ impl BaseClient {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
+            .with_recommended_fillers()
             .wallet(wallet)
             .on_http(self.rpc_url.clone());
 
@@ -224,6 +229,7 @@ impl BaseClient {
         let signer = PrivateKeySigner::from_slice(private_key)?;
         let wallet = EthereumWallet::from(signer);
         let provider = ProviderBuilder::new()
+            .with_recommended_fillers()
             .wallet(wallet)
             .on_http(self.rpc_url.clone());
 
