@@ -58,6 +58,17 @@ zeta-cli base send --to jesse.base --amount 0.001
 zeta-cli base send-usdc --to jesse.base --amount 5.0
 ```
 
+### WETH Operations
+Convert native ETH to Wrapped ETH (WETH) and vice versa.
+
+```bash
+# Wrap ETH (Convert ETH to WETH)
+zeta-cli base wrap --amount 0.001
+
+# Unwrap ETH (Convert WETH back to ETH)
+zeta-cli base unwrap --amount 0.001
+```
+
 ---
 
 ## 🏗 Builder Tools (MultiSender)
