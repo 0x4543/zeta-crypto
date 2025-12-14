@@ -11,6 +11,7 @@ use url::Url;
 
 const BASENAMES_RESOLVER: &str = "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD";
 const BASE_USDC_ADDR: &str = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const BASE_WETH_ADDR: &str = "0x4200000000000000000000000000000000000006";
 
 sol! {
     #[sol(rpc)]
@@ -30,6 +31,12 @@ sol! {
     interface ZetaMultiSender {
         function disperseEther(address[] recipients, uint256[] values) external payable;
         function disperseToken(address token, address[] recipients, uint256[] values) external;
+    }
+
+    #[sol(rpc)]
+    interface IWETH {
+        function deposit() external payable;
+        function withdraw(uint256 wad) external;
     }
 }
 
@@ -239,6 +246,49 @@ impl BaseClient {
 
         let tx_hash = multisender
             .disperseToken(token, recipients, values)
+            .send()
+            .await?
+            .watch()
+            .await?;
+
+        Ok(tx_hash.to_string())
+    }
+
+    pub async fn wrap_eth(&self, private_key: &[u8], amount_wei: U256) -> Result<String> {
+        let signer = PrivateKeySigner::from_slice(private_key)?;
+        let wallet = EthereumWallet::from(signer);
+        let provider = ProviderBuilder::new()
+            .with_recommended_fillers()
+            .wallet(wallet)
+            .on_http(self.rpc_url.clone());
+
+        let weth_addr = Address::from_str(BASE_WETH_ADDR)?;
+        let weth = IWETH::new(weth_addr, &provider);
+
+        let tx_hash = weth
+            .deposit()
+            .value(amount_wei)
+            .send()
+            .await?
+            .watch()
+            .await?;
+
+        Ok(tx_hash.to_string())
+    }
+
+    pub async fn unwrap_eth(&self, private_key: &[u8], amount_wei: U256) -> Result<String> {
+        let signer = PrivateKeySigner::from_slice(private_key)?;
+        let wallet = EthereumWallet::from(signer);
+        let provider = ProviderBuilder::new()
+            .with_recommended_fillers()
+            .wallet(wallet)
+            .on_http(self.rpc_url.clone());
+
+        let weth_addr = Address::from_str(BASE_WETH_ADDR)?;
+        let weth = IWETH::new(weth_addr, &provider);
+
+        let tx_hash = weth
+            .withdraw(amount_wei)
             .send()
             .await?
             .watch()
