@@ -287,12 +287,7 @@ impl BaseClient {
         let weth_addr = Address::from_str(BASE_WETH_ADDR)?;
         let weth = IWETH::new(weth_addr, &provider);
 
-        let tx_hash = weth
-            .withdraw(amount_wei)
-            .send()
-            .await?
-            .watch()
-            .await?;
+        let tx_hash = weth.withdraw(amount_wei).send().await?.watch().await?;
 
         Ok(tx_hash.to_string())
     }
