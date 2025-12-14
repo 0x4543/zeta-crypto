@@ -1,7 +1,7 @@
 use crate::base_client::BaseClient;
 use crate::Wallet;
-use alloy::primitives::{Address, U256};
 use alloy::primitives::utils::{format_units, parse_units};
+use alloy::primitives::{Address, U256};
 use alloy::signers::local::PrivateKeySigner;
 use anyhow::{anyhow, Result};
 use std::str::FromStr;
