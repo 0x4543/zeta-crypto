@@ -1,7 +1,8 @@
 use crate::base_client::BaseClient;
 use crate::Wallet;
-use alloy::primitives::utils::{format_units, parse_units};
 use alloy::primitives::{Address, U256};
+use alloy::primitives::utils::{format_units, parse_units};
+use alloy::signers::local::PrivateKeySigner;
 use anyhow::{anyhow, Result};
 use std::str::FromStr;
 
@@ -142,6 +143,10 @@ pub async fn handle_disperse_eth(
     pairs: Vec<String>,
 ) -> Result<()> {
     let pk = get_private_key_from_input(phrase, pass)?;
+
+    let signer = PrivateKeySigner::from_slice(&pk)?;
+    println!("\n>>> WALLET ADDRESS: {} <<<\n", signer.address());
+
     let client = BaseClient::new(rpc_url)?;
     check_chain_id(&client).await?;
 
@@ -284,5 +289,43 @@ pub async fn handle_allowance(
     let formatted = format_units(allowance, decimals)?;
 
     println!("Allowance: {} tokens", formatted);
+    Ok(())
+}
+
+pub async fn handle_wrap(
+    rpc_url: &str,
+    phrase: &str,
+    pass: Option<&str>,
+    amount: &str,
+) -> Result<()> {
+    let pk = get_private_key_from_input(phrase, pass)?;
+    let client = BaseClient::new(rpc_url)?;
+    check_chain_id(&client).await?;
+
+    let amount_wei = parse_units(amount, "ether")?.into();
+    println!("Wrapping {} ETH into WETH...", amount);
+
+    let tx_hash = client.wrap_eth(&pk, amount_wei).await?;
+    println!("Wrap Successful!");
+    println!("View on BaseScan: {}/tx/{}", EXPLORER_URL, tx_hash);
+    Ok(())
+}
+
+pub async fn handle_unwrap(
+    rpc_url: &str,
+    phrase: &str,
+    pass: Option<&str>,
+    amount: &str,
+) -> Result<()> {
+    let pk = get_private_key_from_input(phrase, pass)?;
+    let client = BaseClient::new(rpc_url)?;
+    check_chain_id(&client).await?;
+
+    let amount_wei = parse_units(amount, "ether")?.into();
+    println!("Unwrapping {} WETH back to ETH...", amount);
+
+    let tx_hash = client.unwrap_eth(&pk, amount_wei).await?;
+    println!("Unwrap Successful!");
+    println!("View on BaseScan: {}/tx/{}", EXPLORER_URL, tx_hash);
     Ok(())
 }
