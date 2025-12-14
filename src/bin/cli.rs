@@ -201,6 +201,22 @@ enum BaseCommands {
         #[arg(long, default_value_t = 18)]
         decimals: u8,
     },
+    Wrap {
+        #[arg(long, env = "ZETA_PHRASE")]
+        phrase: String,
+        #[arg(long, env = "ZETA_PASS")]
+        pass: Option<String>,
+        #[arg(long)]
+        amount: String,
+    },
+    Unwrap {
+        #[arg(long, env = "ZETA_PHRASE")]
+        phrase: String,
+        #[arg(long, env = "ZETA_PASS")]
+        pass: Option<String>,
+        #[arg(long)]
+        amount: String,
+    },
 }
 
 #[tokio::main]
@@ -296,6 +312,20 @@ async fn main() -> Result<()> {
                 decimals,
             } => {
                 base_cmd::handle_allowance(&rpc_url, &token, &owner, &spender, decimals).await?;
+            }
+            BaseCommands::Wrap {
+                phrase,
+                pass,
+                amount,
+            } => {
+                base_cmd::handle_wrap(&rpc_url, &phrase, pass.as_deref(), &amount).await?;
+            }
+            BaseCommands::Unwrap {
+                phrase,
+                pass,
+                amount,
+            } => {
+                base_cmd::handle_unwrap(&rpc_url, &phrase, pass.as_deref(), &amount).await?;
             }
         },
         Commands::GenMnemonic => {
