@@ -41,7 +41,7 @@ name = "zeta-cli"
 path = "src/bin/cli.rs"
 
 [profile.release]
-opt-level = 3
+opt-level = "z"
 lto = true
 strip = true
 codegen-units = 1
